@@ -1,1 +1,12 @@
+build/
+.pytest_cache
+dist/
+*swp
+test.out
+*tmp
+output
+.DS_Store
 venv
+\~\$*
+__pycache__/
+unhandled\ node*
