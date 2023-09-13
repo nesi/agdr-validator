@@ -1,0 +1,2 @@
+class AgdrFormatException(Exception):
+    pass

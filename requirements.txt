@@ -1,0 +1,6 @@
+xlrd==1.0.0
+openpyxl
+pandas
+python-dotenv
+pytest
+pytest-dotenv

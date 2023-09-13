@@ -1,0 +1,7 @@
+build/
+.pytest_cache
+dist/
+*swp
+test.out
+*tmp
+output
