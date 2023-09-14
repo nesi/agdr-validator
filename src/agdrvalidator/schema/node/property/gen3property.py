@@ -33,12 +33,12 @@ class Gen3(Property):
         super().__init__(name, value)
         self._type = type # PropertyType TODO make sure it was populated correctly
         self._pattern = pattern # regex
-        self._isRequired = bool(name in required)
+        self._isRequired = bool(self._input_name in required)
 
 
     def __str__(self):
         representation = {
-            "name": self._name,
+            "name": self._input_name,
             "value": self._value,
             "required": self._isRequired,
             "type": self._type,

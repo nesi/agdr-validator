@@ -9,4 +9,9 @@ output
 venv
 \~\$*
 __pycache__/
+*pyc
+*py[cod]
 unhandled\ node*
+src/.*egg-info/
+report.txt
+src/agdrvalidator/__pycache__/

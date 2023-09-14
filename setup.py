@@ -29,7 +29,7 @@ setup(
     install_requires=REQUIREMENTS,
     entry_points={
         "console_scripts": [
-            "agdrvalidation=agdrvalidator.__main__:main",
+            "agdrvalidator=agdrvalidator.__main__:main",
         ]
     },
 )

@@ -36,9 +36,13 @@ class TerminologyConverter:
 class AGDR(Schema):
     # not sure this should BE a schema
     # it should HAVE a schema (or several)
-    def __init__(self, g3schema, exceldata):
+    def __init__(self, g3schema, exceldata, report=None):
         self.gen3schema = g3schema
         self.raw_data = exceldata
+
+        self.report_output = report
+        if not report:
+            self.report_output = "report.txt"
 
         self.graph_data = None
         # set self.graph_data
@@ -88,7 +92,14 @@ class AGDR(Schema):
                     gen3prop_name = AGDRProperty.convertName(column_name)
                     #if utils.is_truthy(gen3prop_name):
                     if gen3prop_name:
-                        prop = AGDRProperty(column_name, row[i], self.gen3schema.nodes[agdrNode._output_name].getProperty(gen3prop_name))
+                        # TODO: I should be storing property by gen3 name 
+                        # (output name), but it is the spreadsheet name for now
+                        #
+                        # investigate why there is some issue, the issue is 
+                        # that required fields are tracked by input name, 
+                        # but they should be tracked by output name, so that 
+                        # the presence/absence can be validated correctly
+                        prop = AGDRProperty(column_name, row[i], self.gen3schema.nodes[agdrNode._output_name].getProperty(column_name))
                         agdrNode.addProperty(prop)
                     else:
                         # not yet implemented, definitely need to do this
@@ -161,17 +172,23 @@ class AGDR(Schema):
         self._nodes[instrument._output_name] = instrument
 
 
-    def report(self, name, reasons):
-        logger.error(f"Node {name} is invalid")
-        pass
+    def report(self, isValid, name, reasons):
+        with open(self.report_output, 'a') as f:
+            #f.write(f"Node {name} is invalid: \n\t{reasons}\n")
+            if isValid:
+                f.write(f"{name} \t... OK!\n")
+            else:
+                f.write(f"{name} \t... INVALID!\n")
+                for reason in reasons:
+                    f.write(f"\t{reason}:\t{reasons[reason]}\n")
+                f.write("\n")
 
     def validate(self):
         # walk nodes
         # for each node, call validate
         for node in self.walk():
             isValid, reasons = node.validate()
-            if not isValid:
-                self.report(node._input_name, reasons)
+            self.report(isValid, node._input_name, reasons)
 
             # TODO generate report for invalid nodes
 

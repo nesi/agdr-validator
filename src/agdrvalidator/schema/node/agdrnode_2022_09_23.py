@@ -9,7 +9,7 @@ class AGDR(Node):
         '''
         may not be needed
         '''
-        name = name.lower()
+        name = name.lower().strip()
         lookup = {
             "environmental": "metagenome"
         }
@@ -28,15 +28,32 @@ class AGDR(Node):
     def _validate_properties(self):
         node_valid = True
         invalid_properties = {}
+        submitter_ids = set()
         for property in self._properties:
             property_valid, reason = property.validate()
+            # check if there is a duplicated submitter id
+            # (for now: assume we're checking one single project)
+            # (a submitter_id value must be unique within a single project only)
+            if property._output_name == "submitter_id":
+                if property._value in submitter_ids:
+                    node_valid = False
+                    property_valid = False
+                    reason = f"Duplicate submitter_id: {property._value}"
+                    logger.error(f"________duplicate submitter id: {property._value}")
+                submitter_ids.add(property._value)
+
             if not property_valid:
                 node_valid = False
-                invalid_properties[property] = reason
-            if node_valid:
-                logger.debug(f"\t\t[  valid  ]: {property._output_name}... {node_valid}")
+                invalid_properties[property._output_name] = reason
+            #if node_valid:
+            if property_valid:
+                req = False 
+                if property._rule:
+                    req = property._rule._isRequired
+                logger.info(f"\t\t[  valid  ]: {property._output_name}... {property_valid}")
+                #logger.info(f"\t\t[  valid  ]: {property._output_name}... {property_valid} ... required? {req}")
             else:
-                logger.debug(f"\t\t[  PROPERTY INVALID  ]: {property._output_name}... {node_valid}")
+                logger.info(f"\t\t[  PROPERTY INVALID  ]: {property._output_name}... {node_valid}")
         return node_valid, invalid_properties
 
     def validate(self):

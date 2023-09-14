@@ -10,15 +10,20 @@ class AGDR(Property):
     def convertName(cls, name):
         # remove emphasis or indication
         logger.debug(f"convertName: input: {name}")
-        result = name.strip("*").lower()
+        result = name.strip("*").lower().strip()
         lookup = {
             # Experiments
             'name or id': 'submitter_id',
-            'associated_experiment': None, # ??? no corresponding property
-            'associated_references': None, # need to handle this, it is a publication node
+            #'associated_experiment': None, # ??? no corresponding property
+            #'associated_references': None, # need to handle this, it is a publication node
             # Environmental
-            'sample_id': 'submitter_id'
+            # other stuff
+            'sample_id': 'submitter_id',
+            "name": "submitter_id",
+            "sample_id": "submitter_id"
         }
+        if result in lookup:
+            return lookup[result]
         return result
 
     def __init__(self, name, value, gen3property):

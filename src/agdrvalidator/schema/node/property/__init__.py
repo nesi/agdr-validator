@@ -2,6 +2,7 @@ import abc
 
 class Property(abc.ABC):
     def __init__(self, name, value=None):
+        self._input_name = name
         self._name = name
         self._value = value
 
