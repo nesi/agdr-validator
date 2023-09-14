@@ -39,7 +39,7 @@ class AGDR(Node):
                     node_valid = False
                     property_valid = False
                     reason = f"Duplicate submitter_id: {property._value}"
-                    logger.error(f"________duplicate submitter id: {property._value}")
+                    logger.debug(f"________duplicate submitter id: {property._value}")
                 submitter_ids.add(property._value)
 
             if not property_valid:
