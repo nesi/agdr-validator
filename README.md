@@ -22,6 +22,10 @@ git clone https://git.hpcf.nesi.org.nz/gen3/validator.git
 
 `source venv/bin/activate`
 
+### Upgrade pip
+
+`pip install --upgrade pip`
+
 ### Install module
 
 `pip install -e .`
