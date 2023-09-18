@@ -187,12 +187,11 @@ class AGDR(Schema):
         # walk nodes
         # for each node, call validate
         for node in self.walk():
+            logger.debug(f"validating node: {node}")
             isValid, reasons = node.validate()
             self.report(isValid, node._input_name, reasons)
 
-            # TODO generate report for invalid nodes
 
     def walk(self):
         for node in self._nodes:
-            logger.debug(f"validating node: {node}")
             yield self._nodes[node]
