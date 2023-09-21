@@ -25,6 +25,8 @@ setup(
     ],
     packages=find_packages("src"),
     package_dir = {"": "src"},
+    # from https://stackoverflow.com/a/57749691
+    package_data = {'dictionary' : ['data/dicionaries/i*.json']},
     include_package_data=True,
     install_requires=REQUIREMENTS,
     entry_points={

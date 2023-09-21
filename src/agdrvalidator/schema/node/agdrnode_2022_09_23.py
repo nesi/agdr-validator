@@ -38,7 +38,7 @@ class AGDR(Node):
                 if property._value in submitter_ids:
                     node_valid = False
                     property_valid = False
-                    reason = f"Duplicate submitter_id: {property._value}"
+                    reason = f"Duplicate {property._input_name} (submitter_id): {property._value}"
                     logger.debug(f"________duplicate submitter id: {property._value}")
                 submitter_ids.add(property._value)
 

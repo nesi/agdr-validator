@@ -3,6 +3,7 @@ import agdrvalidator.schema.investigation as divst
 from agdrvalidator.parser.dictionary.gen3parser import Gen3 as Gen3Dictionary
 from agdrvalidator.parser.excel.agdrspreadsheet import *
 from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
+from agdrvalidator.data.dictionaries.agdrdictionary_2022_09_23 import loadDictionary
 import os
 import argparse
 
@@ -57,9 +58,7 @@ def main():
     agdr = Agdr(excel)
     agdr.parse()
 
-    d = os.path.join(DATADIR, DICTIONARY)
-    g3dict = Gen3Dictionary(d)
-    schema = g3dict.parse()
+    schema = loadDictionary()
 
     validator = AGDRSchema(schema, agdr, report=output)
     validator.validate()
