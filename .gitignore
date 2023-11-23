@@ -17,3 +17,5 @@ src/.*egg-info/
 report.txt
 src/agdrvalidator/__pycache__/
 pattern_app.out
+demo/
+AGDR_TSV_Output*

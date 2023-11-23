@@ -19,11 +19,16 @@ class AGDR(Property):
             # Environmental
             # other stuff
             'sample_id': 'submitter_id',
-            "name": "submitter_id",
-            "sample_id": "submitter_id"
+            #"name": "submitter_id", # don't override, this is for property.name
+            #'associated_experiment': 'type_of_specimen' # incorrect
         }
         if result in lookup:
             return lookup[result]
+
+        #if ("associated_" in name):
+        #    _, parent = name.split("_")
+        #    return parent + ".submitter_id"
+
         return result
 
     def __init__(self, name, value, gen3property):
@@ -44,18 +49,22 @@ class AGDR(Property):
         else:
             raise Exception("Pattern application not yet implemented")
 
+    def is_required(self):
+        if not self._rule:
+            required = False
+            logger.debug(f"No rule found for property {self._output_name}, assuming not required")
+        else:
+            required = self._rule._isRequired
+        logger.debug(f"property {self._output_name}: {self._value} is required? {required}")
+        return required
+
     def _is_required_and_valid(self):
         '''
         check if property is required, and if it is, is there a value?
         '''
         reason = None 
         valid = True
-        if not self._rule:
-            required = False
-            logger.warning(f"No rule found for property {self._output_name}, assuming not required")
-        else:
-            required = self._rule._isRequired
-        logger.debug(f"property {self._output_name}: {self._value} is required? {required}")
+        required = self.is_required()
 
         if not required:
             valid = True
