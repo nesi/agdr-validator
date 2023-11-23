@@ -6,6 +6,20 @@ import os
 
 logger = logger.setUp(__name__)
 
+empty_values = [
+    None,
+    "",
+    "unknown",
+    "not collected",
+    "not provided",
+    "not applicable",
+    "not available",
+    "not reported",
+    "not specified",
+    "none",
+    "na",
+    "nan"
+]
 
 class AGDRTSVTransformer(TSVTransformer):
     def __init__(self, node):
@@ -48,12 +62,41 @@ class AGDRTSVTransformer(TSVTransformer):
             row_data.append(property._value)
         self.data.append(row_data)
 
+    def _stripEmptyRows(self):
+        empty_rows = [] # list of header names to be removed
+
+        row0 = self.data[0]
+        for idx, hdr in enumerate(self.headers):
+            #print(f"checking header: {hdr}")
+            if str(row0[idx]).lower().strip() in empty_values:
+                # check if all rows are empty
+                allEmpty = True
+                for row in self.data[1:]:
+                    if str(row[idx]).lower().strip() not in empty_values:
+                        allEmpty = False
+                else:
+                    if allEmpty:
+                        empty_rows.append(hdr)
+                    else:
+                        for row in self.data:
+                            if str(row[idx]).lower().strip() in empty_values:
+                                row[idx] = ""
+        for hdr in empty_rows:
+            idx = self.headers.index(hdr)
+            for row in self.data:
+                row.pop(idx)
+            self.headers.remove(hdr)
+
     def toTSV(self, outputdir=None):
         if not outputdir:
             outputdir = "AGDR_TSV_Output" + datetime.datetime.now().strftime("%Y-%m-%d")
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
         outputfile = os.path.join(outputdir, self.table_name + ".tsv")
+
+        # strip out empty rows
+        self._stripEmptyRows()
+
         with open (outputfile, 'w') as f:
             f.write("\t".join(self.headers) + "\n")
             for row in self.data:

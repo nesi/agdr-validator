@@ -1,6 +1,7 @@
 from agdrvalidator.utils import logger
 from agdrvalidator.schema.node import *
 from agdrvalidator.schema.node.property.agdrproperty_2022_09_23 import AGDR as AGDRProperty
+from agdrvalidator import AgdrImplementationException
 
 logger = logger.setUp(__name__)
 
@@ -106,6 +107,18 @@ class AGDR(Node):
         if property._output_name == "submitter_id":
             self._unique_id = property._value
 
+
+    def removeProperty(self, name):
+        if name != "associated_references" and self._output_name != "raw" and self._output_name != "processed_file":
+            raise AgdrImplementationException("Cannot remove property")
+        idx, prop = self._getPropertyAndIndex(name)
+        if idx is not None:
+            #self._properties.remove(name)
+            # this fixed it, I think
+            prop = self._properties.pop(idx)
+        # never get to this line
+        return prop
+
     def getProperties(self):
         return self._properties
 
@@ -123,3 +136,31 @@ class AGDR(Node):
 
     def isParent(self):
         raise NotImplementedError
+
+    def generateSubmitterId(self, parent_submitter_id=None):
+        mytype = self.getProperty("type")#._value
+        if mytype:
+            mytype = mytype._value
+        else:
+            mytype = self._output_name
+        submitter_id = parent_submitter_id
+        if not parent_submitter_id:
+            projectid = self.getProperty("projects.code")#._value
+            if not projectid:
+                projectid = self.getProperty("project_id")
+            else:
+                projectid = projectid._value
+            if not projectid and mytype != "raw" and mytype != "processed_file":
+                raise Exception("Cannot generate submitter_id, no project_id found")
+            submitter_id = projectid
+        if mytype == "core_metadata_collection":
+            submitter_id = f"{submitter_id}_CMC01"
+        elif mytype == "sample":
+            submitter_id = f"{submitter_id}_SAMPLE"
+        elif mytype == "aliquot":
+            submitter_id = f"{submitter_id}_ALQ"
+        elif mytype == "publication":
+            submitter_id = f"{submitter_id}_PUB"
+        elif mytype == "raw" or mytype == "processed_file":
+            submitter_id = self.getProperty("file_name")._value
+        return submitter_id
