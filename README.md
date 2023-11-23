@@ -39,7 +39,7 @@ git clone https://git.hpcf.nesi.org.nz/gen3/validator.git
 
 ```
 agdrvalidator -h
-usage: agdrvalidator [-h] -s SPREADSHEET [-o OUTPUT]
+usage: agdrvalidator [-h] -s SPREADSHEET [-o OUTPUT] [-p PROJECT] [-t]
 
 Generate validation report for AGDR metadata ingest
 
@@ -51,6 +51,8 @@ options:
                         path to output file for validation report
   -p PROJECT, --project PROJECT
                         Project code, e.g. AGDRXXXXX, required for TSV output
+  -t, --tsv             include this flag to convert spreadsheet to TSV output for
+                        Gen3 ingest
 ```
 
 ### Example Outputs
@@ -108,3 +110,22 @@ read_group: AGDR99999_READ_GROUP_1 	... OK!
 
 The expected output format is subject to change, and the `README.md` will 
 be updated accordingly.
+
+
+### Generating TSV output
+
+The validator can also generate a TSV file used for metadata ingest 
+into the AGDR. TSV generation occurs regardless of whether validation is 
+successful, so it is important to check the validation report for errors.
+
+Supply the `-t` flag on the commandline to enable TSV generation.
+
+`submitter_id` generation rules are as follows:
+
+- core_metadata_collection: `project_code` + `_CMC01` 
+- experiment: supplied by user via metadata spreadsheet 
+- sample: `sample_id` + `_SAMPLE`
+- aliquot: `sample_id` + `_ALQ`
+- publication: `sample_id` + `_PUB`
+- raw: filename 
+- processed_file: filename
