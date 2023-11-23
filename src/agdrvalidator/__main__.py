@@ -46,6 +46,8 @@ def getParser():
     #parser.add_argument("-d", "--dictionary", help="path to dictionary file", required=False)
     parser.add_argument("-s", "--spreadsheet", help="path to excel input file containing metadata", required=True)
     parser.add_argument("-o", "--output", help="path to output file for validation report", required=False)
+    parser.add_argument("-p", "--project", help="Project code, e.g. AGDRXXXXX, required for TSV output", required=False)
+    parser.add_argument("-t", "--tsv", help="include this flag to convert spreadsheet to TSV output for Gen3 ingest", required=False, action='store_true')
     return parser
 
 def main():
@@ -53,6 +55,7 @@ def main():
 
     args = parser.parse_args()
     output = args.output
+    project = args.project
 
     excel = args.spreadsheet
     agdr = Agdr(excel)
@@ -60,8 +63,13 @@ def main():
 
     schema = loadDictionary()
 
-    validator = AGDRSchema(schema, agdr, report=output)
+    validator = AGDRSchema(schema, agdr, report=output, project=project)
     validator.validate()
+
+    if args.tsv:
+        print("\n\nConverting to TSV...")
+        validator.toTSV()
+
 
 
 if __name__ == "__main__":

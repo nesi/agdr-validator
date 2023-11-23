@@ -4,6 +4,9 @@ import agdrvalidator.utils as utils
 from agdrvalidator.schema import Schema
 from agdrvalidator.schema.node.agdrnode_2022_09_23 import AGDR as AGDRNode
 from agdrvalidator.schema.node.property.agdrproperty_2022_09_23 import AGDR as AGDRProperty
+from agdrvalidator.schema.node.property.gen3property import Gen3 as Gen3Property
+from agdrvalidator.utils.tabular import * # Table()
+from agdrvalidator.transformer.agdrtsv_2022_09_23 import AGDRTSVTransformer
 
 
 logger = logger.setUp(__name__)
@@ -36,13 +39,17 @@ class TerminologyConverter:
 class AGDR(Schema):
     # not sure this should BE a schema
     # it should HAVE a schema (or several)
-    def __init__(self, g3schema, exceldata, report=None):
+    def __init__(self, g3schema, exceldata, report=None, project=None):
         self.gen3schema = g3schema
         self.raw_data = exceldata
 
         self.report_output = report
         if not report:
             self.report_output = "report.txt"
+
+        self.project_code = project
+        if not self.project_code:
+            self.project_code = "AGDR99999"
 
         self.graph_data = None
         # set self.graph_data
@@ -56,28 +63,30 @@ class AGDR(Schema):
         # TODO
 
 
-    def _addProperties(self, agdrNode, table):
-        logger.debug(f"adding property to node {agdrNode._input_name}")
+    def _addProperties(self, node, table):
+        allNodes = []
+
+        logger.debug(f"adding property to node {node._input_name}")
         # iterate over a Table defined in parser.excel.agdrspreadhseet
 
-        #assert len(table.header) == len(table.data)
-        #       number of headers        number of nodes
-        # I want to check that each row is the same length as headers
-        
-        # TODO: test this with project
-        # THEN: do rule application
-        # FINALLY: come back and do other tables
-        # STRETCH: TSV generator
+        # FIRST: test this with project (/done)
+        # THEN: do rule application (/done)
+        # FINALLY: come back and do other tables (/done)
+        # STRETCH: TSV generator (in progress)
         logger.debug(f"table header:\t{table.header}")
         header = table.header
         if len(table.header) == 1:
             header = table.header[0]
         logger.debug(f"table header: {header}")
-        for row in table.data:
+        for node_count, row in enumerate(table.data):
+            # a new node should be created here, instead of
+            # continuously adding new properties
+            agdrNode = AGDRNode(node._input_name, node._gen3_node)
             #logger.debug(f"row: {row}")
             #logger.debug(f"row length: {len(row)}")
             #logger.debug(f"header length: {len(header)}")
             assert len(row) == len(header)
+            property_names = set()
             for i, column_name in enumerate(header):
                 #logger.debug(f"header item: \t\t\t {column_name}")
                 #logger.debug(f"row item: \t\t\t {row[i]}")
@@ -90,8 +99,8 @@ class AGDR(Schema):
                 # check that it exists before creating property
                 if not utils.is_nan(column_name):
                     gen3prop_name = AGDRProperty.convertName(column_name)
-                    #if utils.is_truthy(gen3prop_name):
                     if gen3prop_name:
+                        property_names.add(gen3prop_name)
                         # TODO: I should be storing property by gen3 name 
                         # (output name), but it is the spreadsheet name for now
                         #
@@ -102,8 +111,19 @@ class AGDR(Schema):
                         prop = AGDRProperty(column_name, row[i], self.gen3schema.nodes[agdrNode._output_name].getProperty(column_name))
                         agdrNode.addProperty(prop)
                     else:
-                        # not yet implemented, definitely need to do this
                         raise Exception(f"unhandled case: property {column_name} does not exist in Gen3 node {agdrNode._output_name}")
+            # check if `submitter_id` was a property, not guaranteed 
+            # for all node types from spreadsheet-based input
+            if "submitter_id" not in property_names:
+                sid = None
+                if agdrNode._output_name == "project":
+                    sid = self.project_code.upper()
+                else:
+                    sid = self.project_code.upper() + "_" + agdrNode._output_name.upper() + "_" + str(node_count)
+                prop = AGDRProperty("submitter_id", sid, self.gen3schema.nodes[agdrNode._output_name].getProperty("submitter_id"))
+                agdrNode.addProperty(prop)
+            allNodes.append(agdrNode)
+        return allNodes
 
     def _graphify(self):
         # convert tabular data from self.exceldata to graph structure
@@ -124,61 +144,182 @@ class AGDR(Schema):
         # to start:
         #   - project node 
 
+
+        # there should be one project only
         project = AGDRNode('project', self.gen3schema._root)
         # TODO add properties
         # (do it here)
-        self._addProperties(project, self.raw_data.Project)
+        project = self._addProperties(project, self.raw_data.Project)[0]
         logger.debug(f"___adding ROOT node: [{project._output_name}]")
         logger.info(f"Project properties:\n\n{self.raw_data.Project.header}\n\n{self.raw_data.Project.data}")
         self._root = project
-        self._nodes[project._output_name] = project
+        self._nodes[project._output_name] = [project] # assume single project
+
+        #logger.debug(f"Experiment data: \n\t{self.raw_data.Experiments.data}")
+        # list of lists, 1 list per row
+
 
         experiments = AGDRNode('experiment', self.gen3schema.nodes["experiment"])
+        name = experiments._output_name
         logger.info(f"Experiment properties:\n\n{self.raw_data.Experiments.header}\n\n{self.raw_data.Experiments.data}")
-        self._addProperties(experiments, self.raw_data.Experiments)
-        logger.debug(f"___adding node: [{experiments._output_name}]")
-        self._nodes[experiments._output_name] = experiments
+        # this here returns a list of nodes
+        experiments = self._addProperties(experiments, self.raw_data.Experiments)
+        logger.debug(f"___adding node: [{name}]")
+        self._nodes[name] = experiments
 
-        # there is some issue with parsing the organism Table for Organism:
-        # (it is showing header for both Organism and Environmental)
-        # (also, need to remove nan's, shown here as None)
-        '''
-        >>> header[0]
-        ['sample_id', 'experiments', 'submitted_to_insdc', 'individual_identifier', 'secondary_identifier', 'bioproject_accession', 'biosample_accession', 'organism', 'sample_organism_maori_name', 'sample_organism_common_name', 'strain', 'isolate', 'breed', 'cultivar', 'ecotype', 'basis_of_record', 'environmental_medium', 'geo_loc_name', 'lat_lon', '** age', '** dev_stage', 'birth_date', 'birth_location', 'sex', 'tissue', 'biomaterial_provider', 'breeding_history', 'breeding_method', 'cell_line', 'cell_subtype', 'cell_type', 'collected_by', 'collection_date', 'culture_collection', 'death_date', 'disease', 'disease_stage', 'genotype', 'growth_protocol', 'health_state', 'phenotype', 'sample_type', 'store_cond', 'stud_book_number', 'treatment', 'specimen_voucher', 'other_catalogue_numbers']
-        >>> header[1]
-        ['sample_id', 'experiments', 'submitted_to_insdc', 'bioproject_accession', 'biosample_accession', 'basis_of_record', 'organism', '** host', '**environmental_medium', 'habitat', 'geo_loc_name', 'lat_lon', 'collection_date', 'rel_to_oxygen', 'samp_collect_device', 'collected_by', 'samp_mat_process', 'samp_size', 'source_material_id', 'store_cond ', 'other_catalogue_numbers', 'isolation_source', 'sample_type', 'pH', 'temperature', None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None, None]
-        '''
-        organism = AGDRNode('organism', self.gen3schema.nodes["organism"])
-        self._addProperties(organism, self.raw_data.Organism)
-        logger.debug(f"___adding node: [{organism._output_name}]")
-        self._nodes[organism._output_name] = organism
+        # add organism nodes
+        organisms = AGDRNode('organism', self.gen3schema.nodes["organism"])
+        name = organisms._output_name
+        logger.info(f"Organism properties:\n\n{self.raw_data.Organism.header}\n\n{self.raw_data.Organism.data}")
+        organisms = self._addProperties(organisms, self.raw_data.Organism)
+        logger.debug(f"___adding node: [{name}]")
+        self._nodes[name] = organisms
 
-        environmental = AGDRNode('environmental', self.gen3schema.nodes["metagenome"])
-        self._addProperties(environmental, self.raw_data.Environmental)
-        logger.debug(f"___adding node: [{environmental._output_name}]")
-        self._nodes[environmental._output_name] = environmental
+        # add metagenome nodes
+        environmentals = AGDRNode('metagenome', self.gen3schema.nodes["metagenome"])
+        name = environmentals._output_name
+        logger.info(f"Environmental properties:\n\n{self.raw_data.Environmental.header}\n\n{self.raw_data.Environmental.data}")
+        environmentals = self._addProperties(environmentals, self.raw_data.Environmental)
+        logger.debug(f"___adding node: [{name}]")
+        self._nodes[name] = environmentals
 
 
-        # TODO: determine whether it's a raw or processed file 
-        # for now, assume processed file only
-        file = AGDRNode('file', self.gen3schema.nodes["processed_file"])
-        self._addProperties(environmental, self.raw_data.Files)
-        logger.debug(f"___adding node: [{file._output_name}]")
-        self._nodes[file._output_name] = file
+        # add raw and processed file nodes
+        # must first determine whether it's a raw or processed file 
+        #
+        # extract raw files
+        type_idx = self.raw_data.Files.getIndexOf("data_category")
+        raw_files = [row for row in self.raw_data.Files.data if "Raw" in row[type_idx] ]
+        rfiles = Table()
+        rfiles.header = self.raw_data.Files.header
+        rfiles.required = self.raw_data.Files.required
+        rfiles.data = raw_files
 
-        instrument = AGDRNode('read_group', self.gen3schema.nodes["read_group"])
-        self._addProperties(instrument, self.raw_data.InstrumentMetadata)
-        logger.debug(f"___adding node: [{instrument._output_name}]")
-        self._nodes[instrument._output_name] = instrument
+        # add raw files
+        files = AGDRNode('raw', self.gen3schema.nodes["raw"])
+        name = files._output_name
+        #files = self._addProperties(files, self.raw_data.Files)
+        files = self._addProperties(files, rfiles)
+        logger.debug(f"___adding node: [{name}]")
+        self._nodes[name] = files
 
 
-    def report(self, isValid, name, reasons):
+        # extract processed files
+        processed_files = [row for row in self.raw_data.Files.data if "Raw" not in row[type_idx] ]
+        pfiles = Table()
+        pfiles.header = self.raw_data.Files.header
+        pfiles.required = self.raw_data.Files.required
+        pfiles.data = processed_files
+
+        # add processed files
+        files = AGDRNode('processed_file', self.gen3schema.nodes["processed_file"])
+        name = files._output_name
+        #files = self._addProperties(files, self.raw_data.Files)
+        files = self._addProperties(files, pfiles)
+        logger.debug(f"___adding node: [{name}]")
+        self._nodes[name] = files
+
+        # add read group nodes
+        instruments = AGDRNode('read_group', self.gen3schema.nodes["read_group"])
+        name = instruments._output_name
+        instruments = self._addProperties(instruments, self.raw_data.InstrumentMetadata)
+        logger.debug(f"___adding node: [{name}]")
+        self._nodes[name] = instruments
+
+        # TODO TODO TODO 
+        # TODO loop back and add missing nodes, e.g. for associated references
+        # TODO TODO TODO 
+
+
+        ########################
+        # some post processing 
+        ########################
+
+        # add required fields to project
+        # dbgap_accession_number
+        g3prop = Gen3Property("dbgap_accession_number", self.project_code, required="dbgap_accession_number")
+        agdrprop = AGDRProperty("dbgap_accession_number", self.project_code, g3prop)
+        project.addProperty(agdrprop)
+        # project code
+        g3prop = Gen3Property("code", self.project_code, required="code")
+        agdrprop = AGDRProperty("code", self.project_code, g3prop)
+        project.addProperty(agdrprop)
+        self._nodes["project"] = [project]
+
+        # determine number of samples per experimental group, for experiment nodes
+        samples_per_exp_group = self._count_samples_per_experimental_group()
+        logger.debug(f"samples per exp group: {samples_per_exp_group}")
+
+        for exp in experiments:
+            # add in missing number_samples_per_experimental_group 
+            logger.debug(f"experiment: {exp.getProperty('submitter_id')._value}")
+            exp_sub_id = exp.getProperty("submitter_id")._value
+            ct = samples_per_exp_group.get(exp_sub_id, 0)
+            g3prop = Gen3Property("number_samples_per_experimental_group", ct, required="number_samples_per_experimental_group")
+            agdrprop = AGDRProperty("number_samples_per_experimental_group", ct, g3prop)
+            exp.addProperty(agdrprop)
+
+            # add in projects.code
+            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            exp.addProperty(agdrprop)
+        self._nodes["experiment"] = experiments
+
+
+        for org in organisms:
+            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            org.addProperty(agdrprop)
+        self._nodes["organism"] = organisms
+
+        for env in environmentals:
+            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            env.addProperty(agdrprop)
+        self._nodes["metagenome"] = environmentals
+
+        for rg in instruments:
+            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            rg.addProperty(agdrprop)
+        self._nodes["read_group"] = instruments
+
+        for raw in self._nodes["raw"]:
+            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            raw.addProperty(agdrprop)
+
+        for pfile in self._nodes["processed_file"]:
+            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            pfile.addProperty(agdrprop)
+
+
+
+    def _count_samples_per_experimental_group(self, counts=None):
+        counts = {}
+        # it would be better if this were a proper graph structure with 
+        # connection between parent and child nodes, then would not have 
+        # to iterate over the entire graph
+        #
+        # need to fix schema implementation to make this possible
+        # ok for now
+        for nodelist in self.walk():
+            for node in nodelist:
+                if node._output_name == "organism" or node._output_name == "metagenome":
+                    experiment_name = node.getProperty("experiments")._value
+                    logger.debug(f"experiment name: {experiment_name}")
+                    counts[experiment_name] = counts.get(experiment_name, 0) + 1
+        return counts
+
+
+    def report(self, isValid, node, reasons):
         with open(self.report_output, 'a') as f:
             #f.write(f"Node {name} is invalid: \n\t{reasons}\n")
             if isValid:
-                f.write(f"{name} \t... OK!\n")
+                f.write(f"{node._input_name}: {node._unique_id} \t... OK!\n")
             else:
-                f.write(f"{name} \t... INVALID!\n")
+                f.write(f"{node._input_name} \t... INVALID!\n")
                 for reason in reasons:
                     f.write(f"\t{reason}:\t{reasons[reason]}\n")
                 f.write("\n")
@@ -186,11 +327,41 @@ class AGDR(Schema):
     def validate(self):
         # walk nodes
         # for each node, call validate
-        for node in self.walk():
-            logger.debug(f"validating node: {node}")
-            isValid, reasons = node.validate()
-            self.report(isValid, node._input_name, reasons)
+        for nodelist in self.walk():
+            submitter_ids = set()
+            for node in nodelist:
+                logger.debug(f"validating node: {node}")
+                isValid, reasons = node.validate()
 
+                # need to check for duplicate submitter_id
+                for property in node._properties:
+                    if property._output_name == "submitter_id":
+                        if property._value in submitter_ids:
+                            isValid = False
+                            reasons[property._output_name] = f"Duplicate {property._input_name} (submitter_id): {property._value}"
+                            logger.debug(f"________duplicate submitter id: {property._value}")
+                        submitter_ids.add(property._value)
+
+                self.report(isValid, node, reasons)
+
+
+    def toTSV(self, outputDirectory=None):
+        # TODO: configure output dir with argparse
+        for nodelist in self.walk():
+            if not nodelist:
+                # not sure why this is happening, TBD: investigate
+                continue
+            logger.debug(f"nodelist: {nodelist}")
+            tt = None
+            for node in nodelist:
+                # check if "type" property exists
+                # this is a one-off problem for Environmental nodes
+                # (bug in spreadsheet template)
+                node.addProperty(AGDRProperty("type", node._input_name, None))
+                if not tt:
+                    tt = AGDRTSVTransformer(node)
+                tt.addRow(node)
+            tt.toTSV(outputDirectory)
 
     def walk(self):
         for node in self._nodes:
