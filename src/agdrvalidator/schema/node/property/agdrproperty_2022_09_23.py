@@ -4,7 +4,6 @@ from agdrvalidator.schema.node.property import *
 logger = logger.setUp(__name__)
 
 
-
 class AGDR(Property):
     @classmethod
     def convertName(cls, name):
@@ -19,6 +18,7 @@ class AGDR(Property):
             # Environmental
             # other stuff
             'sample_id': 'submitter_id',
+            'experiments': 'experiments.submitter_id'
             #"name": "submitter_id", # don't override, this is for property.name
             #'associated_experiment': 'type_of_specimen' # incorrect
         }
@@ -92,3 +92,16 @@ class AGDR(Property):
         #   TODO
 
         return valid, reason
+
+    def __str__(self):
+        representation = {
+            "name": self._input_name,
+            "value": self._value,
+            #"required": self._isRequired,
+            #"type": self._type,
+            #"pattern": self._pattern
+        }
+        return str(representation)
+
+    def __repr__(self):
+        return self.__str__()

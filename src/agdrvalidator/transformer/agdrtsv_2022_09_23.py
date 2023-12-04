@@ -59,7 +59,10 @@ class AGDRTSVTransformer(TSVTransformer):
             #if column == "type":
             #    continue
             property = node.getProperty(column)
-            row_data.append(property._value)
+            if property and property._value:
+                row_data.append(property._value)
+            else:
+                row_data.append("")
         self.data.append(row_data)
 
     def _stripEmptyRows(self):
@@ -87,12 +90,16 @@ class AGDRTSVTransformer(TSVTransformer):
                 row.pop(idx)
             self.headers.remove(hdr)
 
-    def toTSV(self, outputdir=None):
+    def toTSV(self, outputdir=None, nodecount=None):
         if not outputdir:
             outputdir = "AGDR_TSV_Output" + datetime.datetime.now().strftime("%Y-%m-%d")
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
-        outputfile = os.path.join(outputdir, self.table_name + ".tsv")
+
+        # order from root to leaves
+        outputfile = os.path.join(outputdir, str(nodecount) + self.table_name + ".tsv")
+        #outputfile = os.path.join(outputdir, self.table_name + ".tsv")
+
 
         # strip out empty rows
         self._stripEmptyRows()

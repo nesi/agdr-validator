@@ -45,6 +45,8 @@ class Agdr(Parser):
         xls = pd.ExcelFile(self.datapath)
         for i in range(len(self.tabs)):
             try:
+                # the date conversion is wrong, but may be 
+                # a consequence of exporting from Google sheets
                 pdbook.append(pd.read_excel(xls, self.tabs[i]))
             except:
                 raise AgdrFormatException("File is not in AGDR format")
@@ -112,7 +114,7 @@ class Agdr(Parser):
             if cell == "Type:Organism":
                 currentTable = self.Organism
                 continue
-            if cell == "Type:Environmental":
+            if cell == "Type:Environmental" or cell == "Type:Metagenome":
                 currentTable = self.Environmental
                 continue
             if cell == "Biosamples":

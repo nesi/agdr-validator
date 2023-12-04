@@ -51,6 +51,8 @@ options:
                         path to output file for validation report
   -p PROJECT, --project PROJECT
                         Project code, e.g. AGDRXXXXX, required for TSV output
+  -r PROGRAM, --program PROGRAM
+                        Program name, required for TSV output. If unspecified, program name will default to TAONGA
   -t, --tsv             include this flag to convert spreadsheet to TSV output for
                         Gen3 ingest
 ```

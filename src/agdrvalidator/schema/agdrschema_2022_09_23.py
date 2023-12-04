@@ -1,5 +1,6 @@
 from agdrvalidator.utils import logger
 import agdrvalidator.utils as utils
+from agdrvalidator.utils.helpers import *
 #from agdrvalidator.schema.gen3schema import Gen3 as Gen3SchemaBase
 from agdrvalidator.schema import Schema
 from agdrvalidator.schema.node.agdrnode_2022_09_23 import AGDR as AGDRNode
@@ -7,6 +8,7 @@ from agdrvalidator.schema.node.property.agdrproperty_2022_09_23 import AGDR as A
 from agdrvalidator.schema.node.property.gen3property import Gen3 as Gen3Property
 from agdrvalidator.utils.tabular import * # Table()
 from agdrvalidator.transformer.agdrtsv_2022_09_23 import AGDRTSVTransformer
+import datetime
 
 
 logger = logger.setUp(__name__)
@@ -20,36 +22,23 @@ class TerminologyConverter:
         pass
 
 
-#class Gen3(Gen3SchemaBase):
-#    # not sure this should BE a schema
-#    # it should HAVE a schema (or several)
-#    def __init__(self, g3schema, exceldata):
-#        super().__init__(g3schema._root)
-#        self._definitions = g3schema._definitions
-#        self._settings = g3schema._settings
-#        self._terms = g3schema._terms
-#        self.nodes = g3schema.nodes
-#
-#        # tabular data
-#        self.raw_data = exceldata
-#        self.graph_data = {}
-#        # set self.graph_data
-#        self._graphify()
-
 class AGDR(Schema):
-    # not sure this should BE a schema
-    # it should HAVE a schema (or several)
-    def __init__(self, g3schema, exceldata, report=None, project=None):
+    def __init__(self, g3schema, exceldata, report=None, project=None, program=None):
         self.gen3schema = g3schema
         self.raw_data = exceldata
-
-        self.report_output = report
-        if not report:
-            self.report_output = "report.txt"
 
         self.project_code = project
         if not self.project_code:
             self.project_code = "AGDR99999"
+
+        self.report_output = report
+        if not report:
+            self.report_output = f"{self.project_code}_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+
+
+        self.program_name = program
+        if not self.program_name:
+            self.program_name = "TAONGA"
 
         self.graph_data = None
         # set self.graph_data
@@ -57,10 +46,6 @@ class AGDR(Schema):
         self._root = None
         self._nodes = {}
         self._graphify()
-
-        # set root node 
-        # self._root
-        # TODO
 
 
     def _addProperties(self, node, table):
@@ -103,9 +88,8 @@ class AGDR(Schema):
             # check if `submitter_id` was a property, not guaranteed 
             # for all node types from spreadsheet-based input
 
-            # TODO: turn this into a function, document how 
-            # submitter_id is generated for each node type
-            # TODO: need to provide this documentation to Jun
+            # this block below should now be "dead code"
+            # next time maintenance is performed here, remove it and test
             if "submitter_id" not in property_names:
                 sid = None
                 if agdrNode._output_name == "project":
@@ -137,11 +121,12 @@ class AGDR(Schema):
         # to start:
         #   - project node 
 
+        # first, determine project_id, as it will be injected to most nodes
+        proj_id = self.program_name + "-" + self.project_code
+
 
         # there should be one project only
         project = AGDRNode('project', self.gen3schema._root)
-        # TODO add properties
-        # (do it here)
         project = self._addProperties(project, self.raw_data.Project)[0]
         logger.debug(f"___adding ROOT node: [{project._output_name}]")
         logger.info(f"Project properties:\n\n{self.raw_data.Project.header}\n\n{self.raw_data.Project.data}")
@@ -212,7 +197,6 @@ class AGDR(Schema):
         # add processed files
         files = AGDRNode('processed_file', self.gen3schema.nodes["processed_file"])
         name = files._output_name
-        #files = self._addProperties(files, self.raw_data.Files)
         files = self._addProperties(files, pfiles)
         for file in files:
             oldprop = file.removeProperty("submitter_id")
@@ -255,13 +239,23 @@ class AGDR(Schema):
         # don't actually need to loop through experiments because of how 
         # the metadata template is structured -- experiment submitter_id is included 
         # in the metagenome, organism and environmental tables
+
+        ###############################################################
+        # TODO TODO TODO TODO TODO
+        # The developer (Eirian so far) has only seen examples of 
+        # spreadsheets with metagenome nodes
+        # probably code should be duplicated from metagenome to organism
+        #
+        # test with organism and make appropriate changes
+        # TODO TODO TODO TODO TODO
+        ###############################################################
         g3sample = self.gen3schema.nodes["sample"]
         samples = []
         for node in self._nodes["metagenome"]:
             sampleNode = AGDRNode("sample", g3sample)
 
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
             sampleNode.addProperty(agdrprop)
 
             g3prop = Gen3Property("type", "sample", required="type")
@@ -276,22 +270,57 @@ class AGDR(Schema):
             agdrprop = AGDRProperty("metagenomes.submitter_id", node.getProperty("submitter_id")._value, g3prop)
             sampleNode.addProperty(agdrprop)
 
+            g3prop = Gen3Property("organisms.submitter_id", "", required="")
+            agdrprop = AGDRProperty("organisms.submitter_id", "", g3prop)
+            sampleNode.addProperty(agdrprop)
+
             subid = sampleNode.generateSubmitterId(node.getProperty("submitter_id")._value)
             g3prop = Gen3Property("submitter_id", subid, required="submitter_id")
             agdrprop = AGDRProperty("submitter_id", subid, g3prop)
             sampleNode.addProperty(agdrprop)
 
             samples.append(sampleNode)
-            # TODO: add in other required properties
         self._nodes["sample"] = samples
+
+        samples = []
+        for node in self._nodes["organism"]:
+            sampleNode = AGDRNode("sample", g3sample)
+
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
+            sampleNode.addProperty(agdrprop)
+
+            g3prop = Gen3Property("type", "sample", required="type")
+            agdrprop = AGDRProperty("type", "sample", g3prop)
+            sampleNode.addProperty(agdrprop)
+
+            g3prop = Gen3Property("experiments.submitter_id", node.getProperty("experiments")._value, required="experiments.submitter_id")
+            agdrprop = AGDRProperty("experiments.submitter_id", node.getProperty("experiments")._value, g3prop)
+            sampleNode.addProperty(agdrprop)
+
+            g3prop = Gen3Property("metagenomes.submitter_id", "", required="")
+            agdrprop = AGDRProperty("metagenomes.submitter_id", "", g3prop)
+            sampleNode.addProperty(agdrprop)
+
+            g3prop = Gen3Property("organisms.submitter_id", node.getProperty("submitter_id")._value, required="")
+            agdrprop = AGDRProperty("organisms.submitter_id", node.getProperty("submitter_id")._value, g3prop)
+            sampleNode.addProperty(agdrprop)
+
+            subid = sampleNode.generateSubmitterId(node.getProperty("submitter_id")._value)
+            g3prop = Gen3Property("submitter_id", subid, required="submitter_id")
+            agdrprop = AGDRProperty("submitter_id", subid, g3prop)
+            sampleNode.addProperty(agdrprop)
+
+            samples.append(sampleNode)
+        self._nodes["sample"].extend(samples)
 
         g3aliquot = self.gen3schema.nodes["aliquot"]
         aliquots = []
         for node in self._nodes["sample"]:
             aliquotNode = AGDRNode("aliquot", g3aliquot)
 
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
             aliquotNode.addProperty(agdrprop)
 
             g3prop = Gen3Property("type", "aliquot", required="type")
@@ -302,8 +331,6 @@ class AGDR(Schema):
             agdrprop = AGDRProperty("samples.submitter_id", node.getProperty("submitter_id")._value, g3prop)
             aliquotNode.addProperty(agdrprop)
 
-            # this is a hack, ideally there would be a better way to get the 
-            # researcher's input for sample_id here
             subid = aliquotNode.generateSubmitterId(node.getProperty("submitter_id")._value.split("_SAMPLE")[0])
             g3prop = Gen3Property("submitter_id", subid, required="submitter_id")
             agdrprop = AGDRProperty("submitter_id", subid, g3prop)
@@ -317,6 +344,7 @@ class AGDR(Schema):
         #for node in self._nodes["population"]:
         #    pass
         # TODO
+        # ditto for organism
 
 
         ########################
@@ -338,20 +366,24 @@ class AGDR(Schema):
             pubNode.addProperty(agdrprop)
 
             refprop = exp.removeProperty("associated_references")
-            g3prop = Gen3Property("citation_placeholder", refprop._value, required="")
-            agdrprop = AGDRProperty("citation_placeholder", refprop._value, g3prop)
-            pubNode.addProperty(agdrprop)
+            value = ""
+            if refprop:
+                value = refprop._value
+                g3prop = Gen3Property("citation_placeholder", value, required="")
+                agdrprop = AGDRProperty("citation_placeholder", value, g3prop)
+                pubNode.addProperty(agdrprop)
 
-            #g3prop = Gen3Property("submitter_id", node.getProperty("submitter_id")._value, required="submitter_id")
-            #agdrprop = AGDRProperty("submitter_id", f'{node.getProperty("submitter_id")._value}_PUB', g3prop)
-            #pubNode.addProperty(agdrprop)
+                #g3prop = Gen3Property("submitter_id", node.getProperty("submitter_id")._value, required="submitter_id")
+                #agdrprop = AGDRProperty("submitter_id", f'{node.getProperty("submitter_id")._value}_PUB', g3prop)
+                #pubNode.addProperty(agdrprop)
 
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
-            pubNode.addProperty(agdrprop)
+                g3prop = Gen3Property("project_id", proj_id, required="project_id")
+                agdrprop = AGDRProperty("project_id", proj_id, g3prop)
+                pubNode.addProperty(agdrprop)
 
-            publications.append(pubNode)
-        self._nodes["publication"] = publications
+                publications.append(pubNode)
+        if publications:
+            self._nodes["publication"] = publications
 
 
         ########################
@@ -390,31 +422,155 @@ class AGDR(Schema):
 
 
         for org in organisms:
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            # TODO: expand code out as in environmentals below
+            # need a spreadsheet example to verify code correctness
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
+            #g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            #agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            org.addProperty(agdrprop)
+
+            latlon = org.removeProperty("lat_lon")
+            lat, lon = latlonify(latlon._value)
+            g3prop = Gen3Property("latitude_decimal_degrees", lat, required="")
+            agdrprop = AGDRProperty("latitude_decimal_degrees", lat, g3prop)
+            org.addProperty(agdrprop)
+
+            g3prop = Gen3Property("longitude_decimal_degrees", lon, required="")
+            agdrprop = AGDRProperty("longitude_decimal_degrees", lon, g3prop)
+            org.addProperty(agdrprop)
+
+            submitted_to_insdc = org.getProperty("submitted_to_insdc")
+            newval = boolify(submitted_to_insdc._value)
+            g3prop = Gen3Property("submitted_to_insdc", newval, required="")
+            agdrprop = AGDRProperty("submitted_to_insdc", newval, g3prop)
+            org.addProperty(agdrprop)
+
+            # correct date format
+            collection_date = org.getProperty("collection_date")._value
+            newval = dateify(collection_date)
+            g3prop = Gen3Property("collection_date", newval, required="")
+            agdrprop = AGDRProperty("collection_date", newval, g3prop)
             org.addProperty(agdrprop)
         self._nodes["organism"] = organisms
 
         for env in environmentals:
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
+            #g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
+            #agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
             env.addProperty(agdrprop)
+
+            #logger.debug("all properties: "+ "\n".join([str(x) for x in env.getProperties()]))
+            latlon = env.removeProperty("lat_lon")
+            lat, lon = latlonify(latlon._value)
+            g3prop = Gen3Property("latitude_decimal_degrees", lat, required="")
+            agdrprop = AGDRProperty("latitude_decimal_degrees", lat, g3prop)
+            env.addProperty(agdrprop)
+
+            g3prop = Gen3Property("longitude_decimal_degrees", lon, required="")
+            agdrprop = AGDRProperty("longitude_decimal_degrees", lon, g3prop)
+            env.addProperty(agdrprop)
+
+            submitted_to_insdc = env.getProperty("submitted_to_insdc")
+            newval = boolify(submitted_to_insdc._value)
+            g3prop = Gen3Property("submitted_to_insdc", newval, required="")
+            agdrprop = AGDRProperty("submitted_to_insdc", newval, g3prop)
+            env.addProperty(agdrprop)
+
+            # correct date format
+            collection_date = env.getProperty("collection_date")._value
+            newval = dateify(collection_date)
+            g3prop = Gen3Property("collection_date", newval, required="")
+            agdrprop = AGDRProperty("collection_date", newval, g3prop)
+            env.addProperty(agdrprop)
+
+            # remove properties that spreadsheet asks for, 
+            # that are not part of metagenome node in gen3 model
+            env.removeProperty("sample_type")
+            env.removeProperty("organism")
+            env.removeProperty("isolation_source")
+            env.removeProperty("temperature")
+            env.removeProperty("ph")
         self._nodes["metagenome"] = environmentals
 
+        gen_rg_sub_id = []
         for rg in instruments:
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
             rg.addProperty(agdrprop)
+
+            sample_id = rg.removeProperty("corresponding_sample_id")
+
+            subid = rg.generateSubmitterId(sample_id._value)
+            if subid not in gen_rg_sub_id:
+                gen_rg_sub_id.append(subid)
+                subid = subid + "_R1"
+            else:
+                subid = subid + "_R2"
+            g3prop = Gen3Property("submitter_id", subid, required="submitter_id")
+            agdrprop = AGDRProperty("submitter_id", subid, g3prop)
+            rg.addProperty(agdrprop)
+
+            # this is missing from the spreadsheet, so this is 
+            # a bug in the template
+            # uncomment these lines when spreadsheet is updated
+            #print("corr samp id: " + rg.getProperty("corresponding_sample_id"))
+            alq_id = sample_id._value + "_ALQ"
+            g3prop = Gen3Property("aliquots.submitter_id", alq_id, required="aliquots.submitter_id")
+            agdrprop = AGDRProperty("aliquots.submitter_id", alq_id, g3prop)
+            rg.addProperty(agdrprop)
+
+            is_paired_end = rg.getProperty("is_paired_end")
+            newval = boolify(is_paired_end._value)
+            g3prop = Gen3Property("is_paired_end", newval, required="")
+            agdrprop = AGDRProperty("is_paired_end", newval, g3prop)
+            rg.addProperty(agdrprop)
+
         self._nodes["read_group"] = instruments
 
+        rg_sub_id = []
         for raw in self._nodes["raw"]:
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
             raw.addProperty(agdrprop)
 
+            sample_id = raw.removeProperty("corresponding_sample_id")._value
+            rg_id = sample_id + "_RG"
+            if rg_id not in gen_rg_sub_id:
+                if rg_id not in rg_sub_id:
+                    rg_sub_id.append(rg_id)
+                    rg_id = rg_id + "_R1"
+                else:
+                    rg_id = rg_id + "_R2"
+            else:
+                rg_id = rg_id + "_R1"
+            g3prop = Gen3Property("read_groups.submitter_id", rg_id, required="read_groups.submitter_id")
+            agdrprop = AGDRProperty("read_groups.submitter_id", rg_id, g3prop)
+            raw.addProperty(agdrprop)
+
+        rg_sub_id = []
         for pfile in self._nodes["processed_file"]:
-            g3prop = Gen3Property("projects.code", self.project_code, required="projects.code")
-            agdrprop = AGDRProperty("projects.code", self.project_code, g3prop)
+            g3prop = Gen3Property("project_id", proj_id, required="project_id")
+            agdrprop = AGDRProperty("project_id", proj_id, g3prop)
+            pfile.addProperty(agdrprop)
+
+            sample_id = pfile.removeProperty("corresponding_sample_id")._value
+            rg_id = sample_id + "_RG"
+            if rg_id not in gen_rg_sub_id:
+                if rg_id not in rg_sub_id:
+                    rg_sub_id.append(rg_id)
+                    rg_id = rg_id + "_R1"
+                else:
+                    rg_id = rg_id + "_R2"
+            else:
+                rg_id = rg_id + "_R1"
+            g3prop = Gen3Property("read_groups.submitter_id", rg_id, required="read_groups.submitter_id")
+            agdrprop = AGDRProperty("read_groups.submitter_id", rg_id, g3prop)
+            pfile.addProperty(agdrprop)
+
+            g3prop = Gen3Property("data_type", "Processed File", required="")
+            agdrprop = AGDRProperty("data_type", "Processed File", g3prop)
             pfile.addProperty(agdrprop)
 
 
@@ -469,8 +625,11 @@ class AGDR(Schema):
 
 
     def toTSV(self, outputDirectory=None):
+        logger.debug("output order:")
         # TODO: configure output dir with argparse
-        for nodelist in self.walk():
+        nodecount = 0
+        #for nodelist in self.walk():
+        for nodelist in self.walkDictStructure():
             if not nodelist:
                 # not sure why this is happening, TBD: investigate
                 continue
@@ -484,8 +643,16 @@ class AGDR(Schema):
                 if not tt:
                     tt = AGDRTSVTransformer(node)
                 tt.addRow(node)
-            tt.toTSV(outputDirectory)
+            logger.debug(f"{nodecount}: {node._output_name}")
+            tt.toTSV(outputDirectory, nodecount)
+            nodecount += 1
 
     def walk(self):
+        # TBD: walk in the expected order (root to leaves)
         for node in self._nodes:
             yield self._nodes[node]
+
+    def walkDictStructure(self):
+        for node in self.gen3schema.walk():
+            if node.name in self._nodes:
+                yield self._nodes[node.name]
