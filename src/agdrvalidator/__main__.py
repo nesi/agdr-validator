@@ -6,6 +6,7 @@ from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
 from agdrvalidator.data.dictionaries.agdrdictionary_2022_09_23 import loadDictionary
 import os
 import argparse
+import datetime
 
 DATADIR = "test/data"
 DICTIONARY = "gen3.nesi_2022_09_23.json"
@@ -46,7 +47,8 @@ def getParser():
     #parser.add_argument("-d", "--dictionary", help="path to dictionary file", required=False)
     parser.add_argument("-s", "--spreadsheet", help="path to excel input file containing metadata", required=True)
     parser.add_argument("-o", "--output", help="path to output file for validation report", required=False)
-    parser.add_argument("-p", "--project", help="Project code, e.g. AGDRXXXXX, required for TSV output", required=False)
+    parser.add_argument("-p", "--project", help="Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.", required=False)
+    parser.add_argument("-r", "--program", help="Program name, required for TSV output. If unspecified, program name will default to TAONGA", required=False)
     parser.add_argument("-t", "--tsv", help="include this flag to convert spreadsheet to TSV output for Gen3 ingest", required=False, action='store_true')
     return parser
 
@@ -56,6 +58,7 @@ def main():
     args = parser.parse_args()
     output = args.output
     project = args.project
+    program = args.program
 
     excel = args.spreadsheet
     agdr = Agdr(excel)
@@ -63,12 +66,12 @@ def main():
 
     schema = loadDictionary()
 
-    validator = AGDRSchema(schema, agdr, report=output, project=project)
+    validator = AGDRSchema(schema, agdr, report=output, project=project, program=program)
     validator.validate()
 
     if args.tsv:
         print("\n\nConverting to TSV...")
-        validator.toTSV()
+        validator.toTSV(f"{project}_TSV_Output_{datetime.datetime.now().strftime('%Y-%m-%d')}")
 
 
 

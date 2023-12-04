@@ -109,29 +109,41 @@ class AGDR(Node):
 
 
     def removeProperty(self, name):
-        if name != "associated_references" and self._output_name != "raw" and self._output_name != "processed_file":
+        allowable_nodes_and_props = {}
+        allowable_nodes_and_props["metagenome"] = ["lat_lon", "sample_type", "organism", "isolation_source", "temperature", "ph"]
+        allowable_nodes_and_props["organism"] = ["lat_lon"]
+        allowable_nodes_and_props["experiment"] = ["associated_references"]
+        allowable_nodes_and_props["processed_file"] = []
+        allowable_nodes_and_props["raw"] = ["corresponding_sample_id", "submitter_id"]
+        allowable_nodes_and_props["processed_file"] = ["associated_references", "corresponding_sample_id", "submitter_id"]
+        allowable_nodes_and_props["read_group"] = ["corresponding_sample_id"]
+
+        if self._output_name in allowable_nodes_and_props:
+            allowable_props = allowable_nodes_and_props[self._output_name]
+            if len(allowable_props) == 0 or name in allowable_props:
+                # all good
+                idx, prop = self._getPropertyAndIndex(name)
+                if idx is not None:
+                    prop = self._properties.pop(idx)
+                return prop
+            else:
+                raise AgdrImplementationException("Cannot remove property")
+
+        else:
             raise AgdrImplementationException("Cannot remove property")
-        idx, prop = self._getPropertyAndIndex(name)
-        if idx is not None:
-            #self._properties.remove(name)
-            # this fixed it, I think
-            prop = self._properties.pop(idx)
-        # never get to this line
-        return prop
+
 
     def getProperties(self):
         return self._properties
 
-    def _getPropertyAndIndex(self, name, output_name=True):
+    def _getPropertyAndIndex(self, name):
         for idx, property in enumerate(self._properties):
-            if property._output_name == name:
-                return idx, property
-            if not output_name and property._input_name == name:
+            if property._output_name == name or property._name == name:
                 return idx, property
         return None, None
 
-    def getProperty(self, name, output_name=True):
-        _, property = self._getPropertyAndIndex(name, output_name)
+    def getProperty(self, name):
+        _, property = self._getPropertyAndIndex(name)
         return property
 
     def isParent(self):
@@ -163,4 +175,6 @@ class AGDR(Node):
             submitter_id = f"{submitter_id}_PUB"
         elif mytype == "raw" or mytype == "processed_file":
             submitter_id = self.getProperty("file_name")._value
+        elif mytype == "read_group":
+            submitter_id = f"{submitter_id}_RG"
         return submitter_id

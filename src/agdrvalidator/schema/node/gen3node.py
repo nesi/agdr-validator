@@ -106,6 +106,29 @@ class Gen3(Node):
 
     
     def getChildren(self):
+        # add some hack for TSV output order specific to AGDR metadata strcture
+        # (if this is some other dictionary, all the looping below should take no action)
+
+        index = -1
+        for idx, child in enumerate(self._children):
+            if child == None: continue
+            if child.name == "sample":
+                item = child
+                index = idx
+        if index >= 0:
+            item = self._children.pop(index)
+            self._children.append(item)
+
+        index = -1
+        for idx, child in enumerate(self._children):
+            if child == None: continue
+            if child.name == "core_metadata_collection":
+                item = child
+                index = idx
+        if index >= 0:
+            item = self._children.pop(index)
+            self._children.append(item)
+
         return self._children
     
     def addParent(self, parent):
