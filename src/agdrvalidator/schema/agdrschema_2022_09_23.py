@@ -441,9 +441,11 @@ class AGDR(Schema):
             org.addProperty(agdrprop)
 
             submitted_to_insdc = org.getProperty("submitted_to_insdc")
-            newval = boolify(submitted_to_insdc._value)
-            g3prop = Gen3Property("submitted_to_insdc", newval, required="")
-            agdrprop = AGDRProperty("submitted_to_insdc", newval, g3prop)
+            agdrprop = False
+            if submitted_to_insdc:
+                newval = boolify(submitted_to_insdc._value)
+                g3prop = Gen3Property("submitted_to_insdc", newval, required="")
+                agdrprop = AGDRProperty("submitted_to_insdc", newval, g3prop)
             org.addProperty(agdrprop)
 
             # correct date format
