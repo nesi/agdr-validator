@@ -14,11 +14,11 @@ git clone git@git.hpcf.nesi.org.nz:gen3/validator.git
 git clone https://git.hpcf.nesi.org.nz/gen3/validator.git
 ```
 
-### (optional) Create virtual environment
+### (recommended) Create virtual environment
 
 `python3 -m venv venv`
 
-### (optional) Activate virtual environment
+### (recommended) Activate virtual environment
 
 `source venv/bin/activate`
 
@@ -34,7 +34,7 @@ git clone https://git.hpcf.nesi.org.nz/gen3/validator.git
 
 `agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx`
 
-- output will be appended to `report.txt` by default
+- output will be appended to `AGDR99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created
 - you may specify a desired output filename
 
 ```
@@ -60,8 +60,8 @@ options:
 ### Example Outputs
 
 Happy path, no errors in the spreadsheet:
-```(venv) eirian> agdrvalidator -s demo/AGDR_Metadata_Venenivibrio.xlsx
-(venv) eirian> cat report.txt
+```(venv) eirian> agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx
+(venv) eirian> cat AGDR99999_validation_report_YYYY-MM-DD.txt
 project: AGDR99999 	... OK!
 experiment: NZ_GEOTHERMAL_METAGENOMES_01 	... OK!
 experiment: NZ_GEOTHERMAL_MAGS_01 	... OK!
@@ -85,9 +85,9 @@ read_group: AGDR99999_READ_GROUP_1 	... OK!
 
 Sad path, error discovered in the spreadsheet (with description of error):
 ```
-(venv) eirian> rm report.txt
-(venv) eirian> agdrvalidator -s demo/AGDR_Metadata_Venenivibrio.xlsx
-(venv) eirian> cat report.txt
+(venv) eirian> rm AGDR99999_validation_report_YYYY-MM-DD.txt
+(venv) eirian> agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx
+(venv) eirian> cat AGDR99999_validation_report_YYYY-MM-DD.txt
 project: AGDR99999 	... OK!
 experiment: NZ_GEOTHERMAL_METAGENOMES_01 	... OK!
 experiment: NZ_GEOTHERMAL_MAGS_01 	... OK!
