@@ -31,11 +31,16 @@ git clone https://git.hpcf.nesi.org.nz/gen3/validator.git
 `pip install -e .`
 
 ### Run validator on input spreadsheet
+example1: 
 
 `agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx`
 
 - output will be appended to `AGDR99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created
-- you may specify a desired output filename
+- you may specify a desired output filename with -o
+
+example2: 
+`agdrvalidator -t -p AGDR00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx`
+- as well as being validated, TSV files will be created for the program TAONGA and project AGDR00051
 
 ```
 agdrvalidator -h
@@ -57,7 +62,7 @@ options:
                         Gen3 ingest
 ```
 
-### Example Outputs
+#### Example Outputs
 
 Happy path, no errors in the spreadsheet:
 ```(venv) eirian> agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx
@@ -114,7 +119,7 @@ The expected output format is subject to change, and the `README.md` will
 be updated accordingly.
 
 
-### Generating TSV output
+#### Generating TSV output
 
 The validator can also generate a TSV file used for metadata ingest 
 into the AGDR. TSV generation occurs regardless of whether validation is 
