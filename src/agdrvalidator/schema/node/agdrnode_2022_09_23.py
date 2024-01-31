@@ -91,6 +91,7 @@ class AGDR(Node):
         '''
         # one-off fix: ignore "associated_experiment"
         # experiments cannot be linked, this is a bug in the spreadsheet template
+        logger.debug(f"received property: {property}")
         if property._input_name == "associated_experiment":
             return
 
@@ -113,9 +114,10 @@ class AGDR(Node):
         allowable_nodes_and_props["metagenome"] = ["lat_lon", "sample_type", "organism", "isolation_source", "temperature", "ph"]
         allowable_nodes_and_props["organism"] = ["lat_lon"]
         allowable_nodes_and_props["experiment"] = ["associated_references"]
-        allowable_nodes_and_props["processed_file"] = []
+        #allowable_nodes_and_props["processed_file"] = []
         allowable_nodes_and_props["raw"] = ["corresponding_sample_id", "submitter_id"]
         allowable_nodes_and_props["processed_file"] = ["associated_references", "corresponding_sample_id", "submitter_id"]
+        allowable_nodes_and_props["experimental_metadata"] = ["submitter_id", "corresponding_sample_id"]
         allowable_nodes_and_props["read_group"] = ["corresponding_sample_id"]
 
         if self._output_name in allowable_nodes_and_props:
@@ -162,7 +164,7 @@ class AGDR(Node):
                 projectid = self.getProperty("project_id")
             else:
                 projectid = projectid._value
-            if not projectid and mytype != "raw" and mytype != "processed_file":
+            if not projectid and mytype != "raw" and mytype != "processed_file" and mytype != "experimental_metadata":
                 raise Exception("Cannot generate submitter_id, no project_id found")
             submitter_id = projectid
         if mytype == "core_metadata_collection":
@@ -177,4 +179,6 @@ class AGDR(Node):
             submitter_id = self.getProperty("file_name")._value
         elif mytype == "read_group":
             submitter_id = f"{submitter_id}_RG"
+        elif mytype == "experimental_metadata":
+            submitter_id = self.getProperty("file_name")._value
         return submitter_id

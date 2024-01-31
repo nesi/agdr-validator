@@ -188,7 +188,7 @@ class AGDR(Schema):
 
 
         # extract processed files
-        processed_files = [row for row in self.raw_data.Files.data if "Raw" not in row[type_idx] ]
+        processed_files = [row for row in self.raw_data.Files.data if "Raw" not in row[type_idx] and "experimental" not in row[type_idx] ]
         pfiles = Table()
         pfiles.header = self.raw_data.Files.header
         pfiles.required = self.raw_data.Files.required
@@ -198,6 +198,25 @@ class AGDR(Schema):
         files = AGDRNode('processed_file', self.gen3schema.nodes["processed_file"])
         name = files._output_name
         files = self._addProperties(files, pfiles)
+        for file in files:
+            oldprop = file.removeProperty("submitter_id")
+            sid = file.generateSubmitterId()
+            newprop = AGDRProperty("submitter_id", sid, oldprop._rule)
+            file.addProperty(newprop)
+        logger.debug(f"___adding node: [{name}]")
+        self._nodes[name] = files
+
+        # extract experimental metadata files 
+        exp_metadata_files = [row for row in self.raw_data.Files.data if "experimental" in row[type_idx].lower() ]
+        efiles = Table()
+        efiles.header = self.raw_data.Files.header
+        efiles.required = self.raw_data.Files.required
+        efiles.data = exp_metadata_files
+
+        # add experimental metadata files
+        files = AGDRNode('experimental_metadata', self.gen3schema.nodes["experimental_metadata"])
+        name = files._output_name
+        files = self._addProperties(files, efiles)
         for file in files:
             oldprop = file.removeProperty("submitter_id")
             sid = file.generateSubmitterId()
@@ -385,6 +404,17 @@ class AGDR(Schema):
         if publications:
             self._nodes["publication"] = publications
 
+        ########################
+        # Correct experimental_metadata nodes -- hack because of dictionary structure
+        ########################
+        experimental_metadata = self._nodes["experimental_metadata"]
+        for em in experimental_metadata:
+            experiment_id = em.removeProperty("corresponding_sample_id")._value
+            g3prop = Gen3Property("experiments.submitter_id", experiment_id, required="")
+            agdrprop = AGDRProperty("experiments.submitter_id", experiment_id, g3prop)
+            em.addProperty(agdrprop)
+        
+
 
         ########################
         # some post processing 
@@ -442,10 +472,12 @@ class AGDR(Schema):
 
             submitted_to_insdc = org.getProperty("submitted_to_insdc")
             agdrprop = False
+            # TODO: this is a bug
+            newval = False
             if submitted_to_insdc:
                 newval = boolify(submitted_to_insdc._value)
-                g3prop = Gen3Property("submitted_to_insdc", newval, required="")
-                agdrprop = AGDRProperty("submitted_to_insdc", newval, g3prop)
+            g3prop = Gen3Property("submitted_to_insdc", newval, required="")
+            agdrprop = AGDRProperty("submitted_to_insdc", newval, g3prop)
             org.addProperty(agdrprop)
 
             # correct date format
