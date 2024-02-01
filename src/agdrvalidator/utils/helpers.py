@@ -7,7 +7,7 @@ def boolify(value):
     falsy = ['false', 'f', 'no', 'n', '0']
     if not value:
         return "false"
-    elif value.lower() in falsy:
+    elif str(value).lower() in falsy:
         return "false"
     else:
         return "true"
