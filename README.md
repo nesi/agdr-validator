@@ -60,6 +60,7 @@ options:
                         Program name, required for TSV output. If unspecified, program name will default to TAONGA
   -t, --tsv             include this flag to convert spreadsheet to TSV output for
                         Gen3 ingest
+  -v, --version         show program's version number and exit
 ```
 
 #### Example Outputs
