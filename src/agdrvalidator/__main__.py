@@ -4,6 +4,9 @@ from agdrvalidator.parser.dictionary.gen3parser import Gen3 as Gen3Dictionary
 from agdrvalidator.parser.excel.agdrspreadsheet import *
 from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
 from agdrvalidator.data.dictionaries.agdrdictionary_2022_09_23 import loadDictionary
+
+import agdrvalidator.globals.version as version
+
 import os
 import argparse
 import datetime
@@ -50,6 +53,8 @@ def getParser():
     parser.add_argument("-p", "--project", help="Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.", required=False)
     parser.add_argument("-r", "--program", help="Program name, required for TSV output. If unspecified, program name will default to TAONGA", required=False)
     parser.add_argument("-t", "--tsv", help="include this flag to convert spreadsheet to TSV output for Gen3 ingest", required=False, action='store_true')
+    #parser.add_argument("-l", "--loglevel", help="verbosity level, for debugging. Default is 0", required=False)
+    parser.add_argument("-v", "--version", action="version", version=version.nesi_version)
     return parser
 
 def main():
@@ -59,6 +64,9 @@ def main():
     output = args.output
     project = args.project
     program = args.program
+    #verbosity = args.loglevel
+
+    print(f"Validator version: {version.nesi_version}")
 
     excel = args.spreadsheet
     agdr = Agdr(excel)
@@ -66,6 +74,7 @@ def main():
 
     schema = loadDictionary()
 
+    # TBD: add in verbosity settings
     validator = AGDRSchema(schema, agdr, report=output, project=project, program=program)
     validator.validate()
 
