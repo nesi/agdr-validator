@@ -12,10 +12,9 @@ __pycache__/
 *pyc
 *py[cod]
 unhandled\ node*
-src/.*egg-info/
 *egg-info/
 report.txt
-src/agdrvalidator/__pycache__/
 pattern_app.out
 demo/
 AGDR_TSV_Output*
+*_Output_*

@@ -21,6 +21,7 @@ git clone https://git.hpcf.nesi.org.nz/gen3/validator.git
 ### (recommended) Activate virtual environment
 
 `source venv/bin/activate`
+Note: to deactivate the env, just type `deactivate`
 
 ### Upgrade pip
 
@@ -37,6 +38,7 @@ example1:
 
 - output will be appended to `AGDR99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created
 - you may specify a desired output filename with -o
+- the version of the validator is displayed. Any issue with the validator, please report the version number
 
 example2: 
 `agdrvalidator -t -p AGDR00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx`
@@ -60,7 +62,13 @@ options:
                         Program name, required for TSV output. If unspecified, program name will default to TAONGA
   -t, --tsv             include this flag to convert spreadsheet to TSV output for
                         Gen3 ingest
+  -v, --version         show program's version number and exit
 ```
+
+#### Version Number of the Validator
+M.m.dictv example 1.0.20220923
+with M the Major version, m the minor version and dictv the version of the dictionary.
+
 
 #### Example Outputs
 
