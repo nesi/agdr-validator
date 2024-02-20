@@ -51,27 +51,28 @@ class Gen3(Schema):
         return nodes
 
 
-    def walk(self, revisitNodes=False):
-        # think, this should be a generator that 
-        # returns each node in the tree, 
-        # in BFS order
-        #
-        # this might be easier if getParent() were implemented
-        # (after a leaf is reached, can go back up the tree)
-
+    def getUploadOrder(self):
         visitedNodes = set()
-
-        def bfs(node):
+        # walk from root to leaves
+        # only yield node if all parents have been visited
+        def bfsInOrder(node):
+            parents = [x.name for x in node.getParents()]
+            visited = [x.name for x in visitedNodes]
+            if set(parents).issubset(set(visited)):
+                if node.name not in visited:
+                    visitedNodes.add(node)
+                    yield node
             if node.getChildren():
                 for child in node.getChildren():
-                    if not revisitNodes:
-                        if child.name in visitedNodes:
-                            continue
-                        visitedNodes.add(child.name)
-                    yield child
-                    yield from bfs(child)
-            return
-        
-        for node in bfs(self._root):
-            #print (node.name)
+                    if child.name in visitedNodes:
+                        continue
+                    yield from bfsInOrder(child)
+
+        orderedNodes = []
+        for node in bfsInOrder(self._root):
+            orderedNodes.append(node)
+        return orderedNodes
+
+    def walk(self, revisitNodes=False):
+        for node in self.getUploadOrder():
             yield node
