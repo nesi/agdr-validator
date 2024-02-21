@@ -1,3 +1,9 @@
+'''
+@Author: Eirian Perkins
+
+This file was used for prototyping purposes and is not used in production.
+It may be deleted in the future.
+'''
 from enum import Enum
 import json
 

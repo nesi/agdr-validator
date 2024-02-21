@@ -1,5 +1,13 @@
+'''
+@Author: Eirian Perkins
+
+This file contains the Gen3 node class, which is used as a component 
+of the Gen3 schema, which is used to represent an arbitrary Gen3 metadata 
+structure. A Node is a component of a schema, which are linked together 
+in a directed acyclic graph. A node is composed of properties.
+'''
 from agdrvalidator.utils import logger 
-from agdrvalidator.schema.node import *
+from agdrvalidator.schema.node.base import Node as Node
 import agdrvalidator.schema.node.property.gen3property as Property
 from agdrvalidator import AgdrFormatException
 

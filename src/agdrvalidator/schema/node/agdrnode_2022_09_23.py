@@ -1,5 +1,18 @@
+'''
+@Author: Eirian Perkins
+
+This file provides the AGDR node class, specifically for the 2022-09-23 version 
+of the AGDR metadata dictionary. A Node is a component of a schema, connected
+to other nodes, and composed of properties. 
+
+When the data dictionary is updated, a new version of this file should be created
+with the date in the filename, rather than refactoring this version. 
+This will help us to maintain backwards compatibility with older versions of the
+data dictionary, and lower cognitive complexity when writing implementations 
+for the new version of the data dictionary.
+'''
 from agdrvalidator.utils import logger
-from agdrvalidator.schema.node import *
+from agdrvalidator.schema.node.base import Node as Node
 from agdrvalidator.schema.node.property.agdrproperty_2022_09_23 import AGDR as AGDRProperty
 from agdrvalidator import AgdrImplementationException
 
@@ -29,6 +42,14 @@ class AGDR(Node):
         # self._properties is an empty list
         logger.debug(f"Created Node: {name}")
 
+
+    def getGen3Node(self):
+        return self._gen3_node
+
+    def getGen3NodeName(self):
+        return self._gen3_node.name
+
+
     def _validate_properties(self):
         node_valid = True
         invalid_properties = {}
@@ -49,6 +70,13 @@ class AGDR(Node):
                 logger.info(f"\t\t[  PROPERTY INVALID  ]: {property._output_name}... {node_valid}")
         return node_valid, invalid_properties
 
+
+    def _validate_parent_links(self):
+        pass
+
+    def _validate_child_links(self):
+        pass
+
     def validate(self):
         # check if properties are valid
         node_valid, reasons = self._validate_properties()
@@ -62,6 +90,8 @@ class AGDR(Node):
         return node_valid, reasons
 
     def walk(self):
+        # schema needs to connect nodes
+        # TODO then come back
         raise NotImplementedError
 
     def getParents(self):
