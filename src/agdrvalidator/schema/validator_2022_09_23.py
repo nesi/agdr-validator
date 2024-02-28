@@ -401,7 +401,6 @@ class AGDRValidator(Schema):
         #self.showMetadataGraph()
         #print(self._metadata_graph.keys())
         for node_type in self._metadata_graph:
-            #print(node_type)
             yield(node_type)
 
     def validate(self, verbosity=1):
@@ -416,7 +415,8 @@ class AGDRValidator(Schema):
             return
         verbose = verbosity > 1
         print("PERFORMING VALIDATION...")
-        print(f"\tFILE:\t\t{self._outputfile}")
+        if self._outputfile:
+            print(f"\tFILE:\t\t{self._outputfile}")
         self._validateSchema(verbose)
         print("...VALIDATION COMPLETE")
 
