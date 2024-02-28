@@ -55,7 +55,8 @@ def getParser():
                                      description="Generate validation report for AGDR metadata spreadsheet and/or TSV files for metadata ingest")
     #parser.add_argument("-d", "--dictionary", help="path to dictionary file", required=False)
     parser.add_argument("-s", "--spreadsheet", help="path to excel input file containing metadata", required=True)
-    parser.add_argument("-o", "--output", help="path to output file for validation report", required=False)
+    #parser.add_argument("-o", "--output", help="path to output file for validation report", required=False)
+    parser.add_argument("-o", "--stdout", help="write validation report to stdout, otherwise a filename will be generated based on the project code and date of report generation", required=False, action='store_true')
     parser.add_argument("-p", "--project", help="Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.", required=False)
     parser.add_argument("-r", "--program", help="Program name, required for TSV output. If unspecified, program name will default to TAONGA", required=False)
     parser.add_argument("-t", "--tsv", help="include this flag to convert spreadsheet to TSV output for Gen3 ingest", required=False, action='store_true')
@@ -70,8 +71,10 @@ def main():
     parser = getParser()
 
     args = parser.parse_args()
-    output = args.output
+    #output = args.output
     project = args.project
+    if not project:
+        project = "AGDR99999"
     program = args.program
     verbosity = args.loglevel
     if verbosity:
@@ -86,6 +89,7 @@ def main():
     else:
         logsettings.init(level=logging.ERROR)
     validation_verbosity = args.validate
+    write_to_stdout = args.stdout
 
     from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
     from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
@@ -101,12 +105,16 @@ def main():
     schema = loadDictionary()
 
     # TBD: add in verbosity settings
-    agdrschema = AGDRSchema(schema, agdr, report=output, project=project, program=program)
+    #agdrschema = AGDRSchema(schema, agdr, report=output, project=project, program=program)
+    agdrschema = AGDRSchema(schema, agdr, project=project, program=program)
     # ideally all validation should occur inside validator
     agdrschema.validate() 
 
     # work in progress
-    validator = AGDRValidator(schema, agdrschema)
+    report_file = None 
+    if not write_to_stdout:
+        report_file = f"{project}_Validation_Report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+    validator = AGDRValidator(schema, agdrschema, report_file)
     validator.validate(validation_verbosity)
 
     if args.tsv:

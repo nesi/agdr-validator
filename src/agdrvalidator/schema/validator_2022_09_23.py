@@ -111,10 +111,11 @@ class Dataset(object):
 
 
 class AGDRValidator(Schema):
-    def __init__(self, gen3schema, agdrschema):
+    def __init__(self, gen3schema, agdrschema, outputfile=None):
         self._gen3schema = gen3schema # contains dictionary structure
         self._agdrschema = agdrschema # contains metadata
         self._root = agdrschema.getRootNode() # only one project node
+        self._outputfile = outputfile # where to write the report, None for stdout
 
         self._metadata_graph = {} # "list" of Dataset objects
 
@@ -429,21 +430,26 @@ class AGDRValidator(Schema):
             return
         verbose = verbosity > 1
         print("PERFORMING VALIDATION...")
+        print(f"\tFILE:\t\t{self._outputfile}")
         self._validateSchema(verbose)
         print("...VALIDATION COMPLETE")
 
     
-    def _report_header(self, node_type, outputfile=None):
+    def _report_header(self, node_type):
         msg = f"\t{node_type.upper()}"
-        if outputfile:
-            pass
+        if self._outputfile:
+            with open(self._outputfile, "a") as f:
+                f.write(node_type.upper())
+                f.write("\n")
         else:
             print(msg)
 
     
-    def _report_node(self, validation_entry, outputfile=None):
-        if outputfile:
-            pass 
+    def _report_node(self, validation_entry):
+        if self._outputfile:
+            with open(self._outputfile, "a") as f:
+                f.write(f"\t{validation_entry.message}")
+                f.write("\n")
         else:
             print(f"\t\t{validation_entry.message}")
             pass
@@ -506,9 +512,9 @@ class AGDRValidator(Schema):
                                 report = True
                             if entry.validation_error_type == ValidationError.ERROR or report:
                                 if not header_reported:
-                                    self._report_header(node_type, outputfile)
+                                    self._report_header(node_type)
                                     header_reported = True
-                                self._report_node(entry, outputfile)
+                                self._report_node(entry)
 
 
                 # node-based validation (all required properties are present)
