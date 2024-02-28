@@ -42,6 +42,9 @@ class AGDR(Node):
         # self._properties is an empty list
         logger.debug(f"Created Node: {name}")
 
+    def uniqueId(self):
+        return self._unique_id
+
 
     def getGen3Node(self):
         return self._gen3_node

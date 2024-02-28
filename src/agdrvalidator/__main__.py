@@ -52,7 +52,7 @@ DICTIONARY = "gen3.nesi_2022_09_23.json"
 
 def getParser():
     parser = argparse.ArgumentParser(prog="agdrvalidator",
-                                     description="Generate validation report for AGDR metadata ingest")
+                                     description="Generate validation report for AGDR metadata spreadsheet and/or TSV files for metadata ingest")
     #parser.add_argument("-d", "--dictionary", help="path to dictionary file", required=False)
     parser.add_argument("-s", "--spreadsheet", help="path to excel input file containing metadata", required=True)
     parser.add_argument("-o", "--output", help="path to output file for validation report", required=False)
@@ -60,7 +60,10 @@ def getParser():
     parser.add_argument("-r", "--program", help="Program name, required for TSV output. If unspecified, program name will default to TAONGA", required=False)
     parser.add_argument("-t", "--tsv", help="include this flag to convert spreadsheet to TSV output for Gen3 ingest", required=False, action='store_true')
     parser.add_argument("-l", "--loglevel", type=int, help="verbosity level, for debugging. Default is 0, highest is 3", required=False)
-    parser.add_argument("-v", "--version", action="version", version=version.nesi_version)
+    #parser.add_argument('-v', '--validate', action='count', default=0, help="validate the input file. -v will generate a report with all detected errors; -vv will generate a report with all detected errors and warnings; -vvv will generate a report with all detected errors, warnings, and informational messages. Default is 0.")
+    parser.add_argument('-v', '--validate', action='count', default=0, help="validate the input file. -v will generate a report with all detected errors; -vv will generate a report with all detected errors and warnings. Default is 0.")
+    #parser.add_argument("-v", "--version", action="version", version=version.nesi_version)
+    parser.add_argument("--version", action="version", version=version.nesi_version)
     return parser
 
 def main():
@@ -82,13 +85,14 @@ def main():
             logsettings.init(level=logging.DEBUG)
     else:
         logsettings.init(level=logging.ERROR)
+    validation_verbosity = args.validate
 
     from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
     from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
     from agdrvalidator.data.dictionaries.agdrdictionary_2022_09_23 import loadDictionary
     from agdrvalidator.schema.validator_2022_09_23 import AGDRValidator as AGDRValidator
 
-    print(f"Validator version: {version.nesi_version}")
+    print(f"VALIDATOR VERSION: \t\t{version.nesi_version}\n")
 
     excel = args.spreadsheet
     agdr = Agdr(excel)
@@ -97,16 +101,23 @@ def main():
     schema = loadDictionary()
 
     # TBD: add in verbosity settings
-    validator = AGDRSchema(schema, agdr, report=output, project=project, program=program)
-    validator.validate()
+    agdrschema = AGDRSchema(schema, agdr, report=output, project=project, program=program)
+    # ideally all validation should occur inside validator
+    agdrschema.validate() 
 
     # work in progress
-    actual_validator = AGDRValidator(schema, validator)
+    validator = AGDRValidator(schema, agdrschema)
+    validator.validate(validation_verbosity)
 
     if args.tsv:
-        print("\n\nConverting to TSV...")
-        validator.toTSV(f"{project}_TSV_Output_{datetime.datetime.now().strftime('%Y-%m-%d')}")
+        #print("\nConverting to TSV...")
+        print("\nGENERATING TSV FILES...")
+        if not project:
+            project = "AGDR99999"
+        agdrschema.toTSV(f"{project}_TSV_Output_{datetime.datetime.now().strftime('%Y-%m-%d')}")
 
+    # work in progress
+    #actual_validator = AGDRValidator(schema, validator)
 
 
 if __name__ == "__main__":

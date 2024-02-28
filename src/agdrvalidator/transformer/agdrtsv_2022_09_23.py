@@ -1,3 +1,11 @@
+'''
+@Author: Eirian Perkins
+
+This file is a subclass of TSVTransformer, and is intended to convert
+metadata from a spreadsheet aligned with the 2022-09-23 version of the
+AGDR schema into a collection of TSV files, which can be then used 
+for metadata ingestion into a Gen3 data commons.
+'''
 from agdrvalidator.transformer.tsv import TSVTransformer
 from agdrvalidator.utils import logger
 
@@ -90,9 +98,7 @@ class AGDRTSVTransformer(TSVTransformer):
                 row.pop(idx)
             self.headers.remove(hdr)
 
-    def toTSV(self, outputdir=None, nodecount=None):
-        if not outputdir:
-            outputdir = "AGDR_TSV_Output" + datetime.datetime.now().strftime("%Y-%m-%d")
+    def toTSV(self, outputdir, nodecount=None):
         if not os.path.exists(outputdir):
             os.makedirs(outputdir)
 

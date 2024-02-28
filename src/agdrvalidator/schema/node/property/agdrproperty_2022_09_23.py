@@ -1,3 +1,11 @@
+'''
+@Author: Eirian Perkins
+
+This file models properties of nodes from the AGDR data dictionary 
+version 2022-09-23. All nodes have a collection of properties, which 
+have a name, value, type, and possibly a regex pattern. A property
+may or may not be required. A required property must have a value.
+'''
 from agdrvalidator.utils import logger
 from agdrvalidator.schema.node.property import *
 
@@ -42,6 +50,7 @@ class AGDR(Property):
         logger.debug(f"\t\t name: {name}")
         logger.debug(f"\t\t value: {value}")
         logger.debug(f"\t\t gen3prop: {str(gen3property)}")
+
 
     def _is_pattern_valid(self):
         if not self._rule._pattern:

@@ -22,6 +22,7 @@ from agdrvalidator.schema.node.property.gen3property import Gen3 as Gen3Property
 from agdrvalidator.utils.tabular import * # Table()
 from agdrvalidator.transformer.agdrtsv_2022_09_23 import AGDRTSVTransformer
 import datetime
+from agdrvalidator import AgdrNotFoundException
 
 
 logger = logger.setUp(__name__)
@@ -63,6 +64,11 @@ class AGDR(Schema):
 
     def getRootNode(self):
         return self._root
+
+    def findNode(self, name):
+        if name in self._nodes:
+            return self._nodes[name]
+        raise AgdrNotFoundException(f"node {name} not found in AGDR schema")
 
 
     def _addProperties(self, node, table):
@@ -143,7 +149,9 @@ class AGDR(Schema):
 
 
         # there should be one project only
-        project = AGDRNode('project', self.gen3schema._root)
+        # hack to extract gen3 project node; root is actually program
+        g3proj = self.gen3schema._root.getChildren()[0]
+        project = AGDRNode('project', g3proj)
         project = self._addProperties(project, self.raw_data.Project)[0]
         logger.debug(f"___adding ROOT node: [{project._output_name}]")
         logger.info(f"Project properties:\n\n{self.raw_data.Project.header}\n\n{self.raw_data.Project.data}")
@@ -673,6 +681,16 @@ class AGDR(Schema):
                         submitter_ids.add(property._value)
 
                 self.report(isValid, node, reasons)
+
+
+    def _postprocess(self):
+        for nodelist in self.walkDictStructure():
+            for node in nodelist:
+                # check if "type" property exists
+                # this is a one-off problem for Environmental nodes
+                # (bug in spreadsheet template)
+                node.addProperty(AGDRProperty("type", node._input_name, None))
+
 
 
     def toTSV(self, outputDirectory=None):

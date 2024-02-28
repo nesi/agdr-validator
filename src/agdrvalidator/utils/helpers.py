@@ -1,3 +1,8 @@
+'''
+@Author: Eirian Perkins
+
+This file provides some helper functions for the agdrvalidator package.
+'''
 import re
 from datetime import datetime
 import dateutil.parser as dp

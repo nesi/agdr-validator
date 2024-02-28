@@ -16,7 +16,6 @@ from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
 from agdrvalidator.schema.gen3schema import Gen3 as Gen3Schema
 from agdrvalidator.schema.base import Schema
 
-logger = logger.setUp(__name__)
 
 class Validator(Schema):
     def __init__(self, gen3schema, agdrschema):
