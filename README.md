@@ -99,7 +99,6 @@ VALIDATOR VERSION: 		1.0.20220923
 
 2024-02-29 10:38:43,697 ERROR agdrvalidator.schema.validator_2022_09_23 282: ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
 PERFORMING VALIDATION...
-	FILE:		None
 	READ_GROUP
 		ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
 ...VALIDATION COMPLETE
