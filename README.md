@@ -4,6 +4,8 @@ The first version has limited functionality.
 Please check `README.md` for information on new features as 
 they are added.
 
+WARNING: A minimum version of Python 3.7 is assumed.
+
 ### Clone repository
 
 ```
@@ -144,3 +146,11 @@ Supply the `-t` flag on the commandline to enable TSV generation.
 - publication: `sample_id` + `_PUB`
 - raw: filename 
 - processed_file: filename
+
+
+#### When things go wrong
+
+If you are using the validator and encounter an error or unexpected behaviour,
+it would be most helpful if you could re-run the command with the 
+`-l 3` option. This will generate a log file with the highest verbosity 
+level, which will help developers to diagnose the issue.
