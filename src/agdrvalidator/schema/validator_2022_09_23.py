@@ -292,14 +292,6 @@ class AGDRValidator(Schema):
 
                         break
 
-                if validationError:
-                    keys = ""
-                    for key in lookup_props:
-                        property = node.metadata.getProperty(key)
-                        if property:
-                            keys += f"{key}: {property.get_value()}"
-                    raise Exception(f"no match for any keys: {keys}")
-
 
     def findNode(self, node_name, submitter_id):
         '''
@@ -395,12 +387,6 @@ class AGDRValidator(Schema):
         but due to an earlier implementation flaw, this was implemented
         inside the AGDRSchema class. walk() would then be used to 
         generate TSVs for each node in the graph structure.
-
-        ---also ideally, validate() would be called on each node returned 
-        ---by the walk() generator, however this is implemented inside the 
-        ---AGDRSchema class, again due to the earlier implementation flaw.
-        ---These comments are left here to improve the implementation of 
-        ---validation logic for a future version of a data dictionary.
 
         As of Python 3.7, regular dicts are guaranteed to be ordered, so 
         iterating over self._metadata_graph will return nodes in the

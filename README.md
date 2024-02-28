@@ -4,7 +4,7 @@ The first version has limited functionality.
 Please check `README.md` for information on new features as 
 they are added.
 
-WARNING: A minimum version of Python 3.7 is assumed.
+**WARNING**: A minimum version of Python 3.7 is assumed.
 
 ### Clone repository
 
@@ -36,35 +36,39 @@ Note: to deactivate the env, just type `deactivate`
 ### Run validator on input spreadsheet
 example1: 
 
-`agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx`
+`agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v -p AGDR99999`
 
-- output will be appended to `AGDR99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created
-- you may specify a desired output filename with -o
-- the version of the validator is displayed. Any issue with the validator, please report the version number
+- the `-v` option is required in order to perform validation, or else validation is skipped
+  - using `-vv` will increase **validation** verbosity. By default, only errors are displayed. `-vv` will also display warnings and informational messages, for instance if optional links between nodes are not set.
+  - the report will be written to a file based on the project code and the current date. Use the `--stdout` flag to display the validation report in the terminal instead.
+- output will be appended to `AGDR99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created, and `AGDR99999` being the project code specified by the `-p` flag. This should always be specified when doing TSV generation as it specifies the project the metadata is associated with.
+- flags may be specified in any order
+- the version of the validator will always be displayed. Any issue with the validator, please report the version number. If `--version` is specified, the validator will display the version number and exit.
 
 example2: 
-`agdrvalidator -t -p AGDR00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx`
+`agdrvalidator -t -p AGDR00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v`
 - as well as being validated, TSV files will be created for the program TAONGA and project AGDR00051
 
 ```
-agdrvalidator -h
-usage: agdrvalidator [-h] -s SPREADSHEET [-o OUTPUT] [-p PROJECT] [-t]
+$ agdrvalidator --help
+usage: agdrvalidator [-h] -s SPREADSHEET [-o] [-p PROJECT] [-r PROGRAM] [-t] [-l LOGLEVEL] [-v] [--version]
 
-Generate validation report for AGDR metadata ingest
+Generate validation report for AGDR metadata spreadsheet and/or TSV files for metadata ingest
 
 options:
   -h, --help            show this help message and exit
   -s SPREADSHEET, --spreadsheet SPREADSHEET
                         path to excel input file containing metadata
-  -o OUTPUT, --output OUTPUT
-                        path to output file for validation report
+  -o, --stdout          write validation report to stdout, otherwise a filename will be generated based on the project code and date of report generation
   -p PROJECT, --project PROJECT
-                        Project code, e.g. AGDRXXXXX, required for TSV output
+                        Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.
   -r PROGRAM, --program PROGRAM
                         Program name, required for TSV output. If unspecified, program name will default to TAONGA
-  -t, --tsv             include this flag to convert spreadsheet to TSV output for
-                        Gen3 ingest
-  -v, --version         show program's version number and exit
+  -t, --tsv             include this flag to convert spreadsheet to TSV output for Gen3 ingest
+  -l LOGLEVEL, --loglevel LOGLEVEL
+                        verbosity level, for debugging. Default is 0, highest is 3
+  -v, --validate        validate the input file. -v will generate a report with all detected errors; -vv will generate a report with all detected errors and warnings. Default is 0.
+  --version             show program's version number and exit
 ```
 
 #### Version Number of the Validator
@@ -75,54 +79,32 @@ with M the Major version, m the minor version and dictv the version of the dicti
 #### Example Outputs
 
 Happy path, no errors in the spreadsheet:
-```(venv) eirian> agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx
-(venv) eirian> cat AGDR99999_validation_report_YYYY-MM-DD.txt
-project: AGDR99999 	... OK!
-experiment: NZ_GEOTHERMAL_METAGENOMES_01 	... OK!
-experiment: NZ_GEOTHERMAL_MAGS_01 	... OK!
-environmental: AP 	... OK!
-environmental: CPc 	... OK!
-environmental: CPp 	... OK!
-environmental: CPr 	... OK!
-environmental: IMP.14_MG 	... OK!
-environmental: IMP.15_MG 	... OK!
-environmental: P1.0037_MG 	... OK!
-environmental: P1.0103_MG 	... OK!
-raw: AGDR99999_RAW_0 	... OK!
-raw: AGDR99999_RAW_1 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_0 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_1 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_2 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_3 	... OK!
-read_group: AGDR99999_READ_GROUP_0 	... OK!
-read_group: AGDR99999_READ_GROUP_1 	... OK!
 ```
+$ agdrvalidator -s AGDR_Metadata_Venenivibrio.xlsx -t -p demoproj -v --stdout
+VALIDATOR VERSION: 		1.0.20220923
 
-Sad path, error discovered in the spreadsheet (with description of error):
+PERFORMING VALIDATION...
+	FILE:		None
+...VALIDATION COMPLETE
+
+GENERATING TSV FILES...
 ```
-(venv) eirian> rm AGDR99999_validation_report_YYYY-MM-DD.txt
-(venv) eirian> agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx
-(venv) eirian> cat AGDR99999_validation_report_YYYY-MM-DD.txt
-project: AGDR99999 	... OK!
-experiment: NZ_GEOTHERMAL_METAGENOMES_01 	... OK!
-experiment: NZ_GEOTHERMAL_MAGS_01 	... OK!
-environmental: AP 	... OK!
-environmental: AP  	... INVALID!
-	submitter_id:	Duplicate submitter_id: AP
-environmental: CPp 	... OK!
-environmental: CPr 	... OK!
-environmental: IMP.14_MG 	... OK!
-environmental: IMP.15_MG 	... OK!
-environmental: P1.0037_MG 	... OK!
-environmental: P1.0103_MG 	... OK!
-raw: AGDR99999_RAW_0 	... OK!
-raw: AGDR99999_RAW_1 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_0 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_1 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_2 	... OK!
-processed_file: AGDR99999_PROCESSED_FILE_3 	... OK!
-read_group: AGDR99999_READ_GROUP_0 	... OK!
-read_group: AGDR99999_READ_GROUP_1 	... OK!
+Please provide feedback to the development team if you would like any 
+changes to the output format.
+
+Sad path, error discovered in the spreadsheet (duplicate `submitter_id`):
+```
+$ agdrvalidator -s AGDR_Metadata_Venenivibrio.xlsx -t -p demoproj -v --stdout
+VALIDATOR VERSION: 		1.0.20220923
+
+2024-02-29 10:38:43,697 ERROR agdrvalidator.schema.validator_2022_09_23 282: ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
+PERFORMING VALIDATION...
+	FILE:		None
+	READ_GROUP
+		ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
+...VALIDATION COMPLETE
+
+GENERATING TSV FILES...
 ```
 
 The expected output format is subject to change, and the `README.md` will 
