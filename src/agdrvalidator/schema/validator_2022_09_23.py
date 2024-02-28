@@ -470,7 +470,7 @@ class AGDRValidator(Schema):
         for node_type in self.walk():
             submitter_ids = set()
             for node in self._metadata_graph[node_type]:
-                submitter_id = node.metadata.getProperty("submitter_id")
+                submitter_id = node.metadata.getProperty("submitter_id").get_value()
                 if submitter_id in submitter_ids:
                     node_id = node.metadata.getProperty('submitter_id').get_value()
                     msg = f"ERROR: duplicate submitter_id found for {node_type} node: {submitter_id}"

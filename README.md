@@ -92,18 +92,28 @@ GENERATING TSV FILES...
 Please provide feedback to the development team if you would like any 
 changes to the output format.
 
-Sad path, error discovered in the spreadsheet (duplicate `submitter_id`):
+Sad path, error discovered (duplicate `submitter_id` in Environmental field from the spreadsheet). The 
+`agdrvalidator` constructs placeholder nodes that aren't explicitly included in the spreadsheet,
+which is why the error message refers to `metagenome`, `sample`, and `aliquot` nodes even though the 
+spreadsheet error is in the `Environmental` field. 
 ```
-$ agdrvalidator -s AGDR_Metadata_Venenivibrio.xlsx -t -p demoproj -v --stdout
+$ agdrvalidator -s AGDR_Metadata_Venenivibrio.xlsx --stdout -v
 VALIDATOR VERSION: 		1.0.20220923
 
-2024-02-29 10:38:43,697 ERROR agdrvalidator.schema.validator_2022_09_23 282: ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
+2024-02-29 11:09:14,831 ERROR agdrvalidator.schema.validator_2022_09_23 282: ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
 PERFORMING VALIDATION...
+	METAGENOME
+		ERROR: duplicate submitter_id found for metagenome node: CPc
+		ERROR: duplicate submitter_id found for metagenome node: CPc
+	SAMPLE
+		ERROR: duplicate submitter_id found for sample node: CPc_SAMPLE
+		ERROR: duplicate submitter_id found for sample node: CPc_SAMPLE
+	ALIQUOT
+		ERROR: duplicate submitter_id found for aliquot node: CPc_ALQ
+		ERROR: duplicate submitter_id found for aliquot node: CPc_ALQ
 	READ_GROUP
 		ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
 ...VALIDATION COMPLETE
-
-GENERATING TSV FILES...
 ```
 
 The expected output format is subject to change, and the `README.md` will 
