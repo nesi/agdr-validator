@@ -1,3 +1,13 @@
+'''
+@Author: Eirian Perkins
+
+The purpose of this file is to parse AGDR spreadsheets. The spreadsheet 
+templates are not currently versioned, but should be moving forward. 
+
+The parsing depends on the AGDR spreadsheet format, and expects certain 
+headers to be present. If there is a problem with validation, check 
+the spreadsheet for the expected headers and column names
+'''
 from agdrvalidator.utils import logger
 from agdrvalidator.utils.array import *
 from agdrvalidator import AgdrFormatException
@@ -181,7 +191,7 @@ class Agdr(Parser):
             if cell == "Files" or "Files generated from experiments" in cell:
                 currentTable = self.Files
                 continue
-            if cell == "Instrument metadata (optional)":
+            if "Instrument metadata" in cell:
                 currentTable = self.InstrumentMetadata
                 shouldLogContent = False
                 continue

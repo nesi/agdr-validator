@@ -80,12 +80,14 @@ class AGDR(Node):
     def _validate_child_links(self):
         pass
 
-    def validate(self):
+    def validate(self, verbose=False):
         # check if properties are valid
+        logger.debug(f"node name: {self._output_name}")
         node_valid, reasons = self._validate_properties()
 
         # check if node has proper required links 
-        # TODO
+        # (this is done in the validator, not at the node level)
+        # (which also means the agdrnode implementation here is overly-complicated)
 
         # check node multiplicity
         # TODO

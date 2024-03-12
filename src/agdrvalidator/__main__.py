@@ -108,7 +108,7 @@ def main():
     #agdrschema = AGDRSchema(schema, agdr, report=output, project=project, program=program)
     agdrschema = AGDRSchema(schema, agdr, project=project, program=program)
     # ideally all validation should occur inside validator
-    agdrschema.validate() 
+    #agdrschema.validate()  # do validation from the validator
 
     # work in progress
     report_file = None 

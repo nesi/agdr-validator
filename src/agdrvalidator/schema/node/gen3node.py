@@ -321,12 +321,23 @@ class Gen3(Node):
                 # e.g. if property is "id", skip it for now
                 # id is system-generated
                 continue
-            #if property == "id":
-            #    logger.debug(f"\t\t\t:skipping property: {property}")
-            #    continue
+            if property == "id":
+                # makes pattern application way too complicated,
+                # plus gen3 adds the id field anyway
+                logger.debug(f"\t\t\t:skipping property: {property}")
+                continue
+            # TODO TODO TODO TODO TODO
+            # need to extract pattern properly
             pat = None
-            if "pattern" in nested_properties[property]:
-                pat = nested_properties[property]["pattern"]
+            #if "pattern" in nested_properties[property]:
+            #    pat = nested_properties[property]["pattern"]
+            #    print(f"pattern: {pat}")
+            #else:
+            #    #print(nested_properties[property])
+            #    pass
+            #if 'type' in nested_properties:
+            #    pat = self.extractPattern(nested_properties['type'])
+            pat = self.extractPattern(nested_properties)
             if "type" in nested_properties[property]:
                 p = Property.Gen3(property, value=nested_properties[property], required=required, type=nested_properties[property]["type"], pattern=pat)
                 logger.debug(f"\t\t\t:_______CASE 1________")
@@ -361,3 +372,22 @@ class Gen3(Node):
                 p = Property.Gen3(key, value=property[key], required=required, type=property[key]["type"], pattern=pat)
                 # create property object
                 self.add_property(p)
+
+
+    def extractPattern(self, nested_props):
+        '''
+        recursively search for pattern in property from the input data dictionary
+        '''
+        logger.debug(nested_props)
+        if isinstance(nested_props, dict):
+            if "pattern" in nested_props:
+                logger.debug("found pattern:")
+                logger.debug(nested_props["pattern"])
+                return nested_props["pattern"]
+            for key in nested_props:
+                extraction = self.extractPattern(nested_props[key])
+                if extraction:
+                    logger.debug(f"found pattern: {extraction}")
+                    return extraction
+        else:
+            return None

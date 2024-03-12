@@ -439,6 +439,22 @@ class AGDRValidator(Schema):
         else:
             print(f"\t\t{validation_entry.message}")
             pass
+
+    def _report_node_properties(self, node_type, node, verbose):
+        isValid, reasons = node.metadata.validate(verbose)
+        if not isValid:
+            if self._outputfile:
+                with open(self._outputfile, "a") as f:
+                    f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
+                    for reason in reasons:
+                        f.write(f"\t{reason}\n")
+                        f.write(f"\t\t{reasons[reason]}\n")
+            else:
+                print(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]")
+                for reason in reasons:
+                    print(f"\t{reason}")
+                    print(f"\t\t{reasons[reason]}")
+            # will in turn call property-based validation
         
 
     
@@ -492,6 +508,7 @@ class AGDRValidator(Schema):
                 node_id = node.metadata.getProperty('submitter_id').get_value()
                 if node_type in self._node_validation_errors:
                     if node_id in self._node_validation_errors[node_type]:
+                        # report any connectivity errors, like missing links or duplicate submitter ID
                         for entry in self._node_validation_errors[node_type][node_id]:
                             report = False
                             if (entry.validation_error_type == ValidationError.INFO or entry.validation_error_type == ValidationError.WARNING) and verbose:
@@ -504,11 +521,4 @@ class AGDRValidator(Schema):
 
 
                 # node-based validation (all required properties are present)
-                self._validateNode(node, verbose)
-                # will in turn call property-based validation
-                
-
-    def _validateNode(self, node, verbose):
-        logger.debug(f"performing validation on {node.name}:{node.metadata.getProperty('submitter_id')} node")
-        # TODO: implement node validation
-        # move it from agdrschema_2022_09_23.py
+                self._report_node_properties(node_type, node, verbose)

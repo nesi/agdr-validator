@@ -665,6 +665,12 @@ class AGDR(Schema):
                 f.write("\n")
 
     def validate(self):
+        '''
+        deprecated
+
+        validation should be performed from the validator on a schema, 
+        not from a metadata schema
+        '''
         # walk nodes
         # for each node, call validate
         for nodelist in self.walk():
