@@ -241,10 +241,12 @@ class AGDRValidator(Schema):
                     orphans.append(node)
 
             orphan_count = 0
+            reported_errors = set()
             for node in orphans:
                 for plink in node.metadata.getGen3Node().getParentLinks():
                     node_id = node.metadata.getProperty('submitter_id').get_value()
                     entry = None
+                    msg = None
                     if plink.requiredtype == RequiredType.OPTIONAL:
                         msg = f"INFO:\tno optional link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
                         logger.debug(msg)
@@ -263,7 +265,9 @@ class AGDRValidator(Schema):
                         self._node_validation_errors[node.name] = {}
                     if node_id not in self._node_validation_errors[node.name]:
                         self._node_validation_errors[node.name][node_id] = []
-                    self._node_validation_errors[node.name][node_id].append(entry)
+                    if msg not in reported_errors:
+                        self._node_validation_errors[node.name][node_id].append(entry)
+                    reported_errors.add(msg)
 
                 orphan_count += 1
                 progress_bar(( orphan_count + progress_count + len(connected_node_names) )/ progress_total)
