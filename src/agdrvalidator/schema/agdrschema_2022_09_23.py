@@ -24,6 +24,7 @@ from agdrvalidator.transformer.agdrtsv_2022_09_23 import AGDRTSVTransformer
 import datetime
 from agdrvalidator import AgdrNotFoundException
 
+from alive_progress import alive_bar
 
 logger = logger.setUp(__name__)
 
@@ -61,6 +62,12 @@ class AGDR(Schema):
         self._nodes = {}
         self._graphify()
 
+
+    def getNodeCount(self):
+        count = 0
+        for node in self._nodes:
+            count += len(self._nodes[node])
+        return count
 
     def getRootNode(self):
         return self._root
@@ -702,28 +709,33 @@ class AGDR(Schema):
 
 
     def toTSV(self, outputDirectory=None):
-        logger.debug("output order:")
+        num_files_to_write = 0
+        for nodelist in self.walkDictStructure():
+            if not nodelist:
+                continue
+            num_files_to_write += len(nodelist)
         # TODO: configure output dir with argparse
         nodecount = 0
         #for nodelist in self.walk():
-        for nodelist in self.walkDictStructure():
-            if not nodelist:
-                # not sure why this is happening, TBD: investigate
-                continue
-            logger.debug(f"nodelist: {nodelist}")
-            tt = None
-            for node in nodelist:
-                # check if "type" property exists
-                # this is a one-off problem for Environmental nodes
-                # (bug in spreadsheet template)
-                node.addProperty(AGDRProperty("type", node._input_name, None))
-                if not tt:
-                    tt = AGDRTSVTransformer(node)
-                tt.addRow(node)
-            logger.debug(f"{nodecount}: {node._output_name}")
-            tt.toTSV(outputDirectory, nodecount)
-            nodecount += 1
-
+        with alive_bar(num_files_to_write, title="\tWriting metadata to TSVs") as bar:
+            for nodelist in self.walkDictStructure():
+                if not nodelist:
+                    # not sure why this is happening, TBD: investigate
+                    continue
+                logger.debug(f"nodelist: {nodelist}")
+                tt = None
+                for node in nodelist:
+                    # check if "type" property exists
+                    # this is a one-off problem for Environmental nodes
+                    # (bug in spreadsheet template)
+                    node.addProperty(AGDRProperty("type", node._input_name, None))
+                    if not tt:
+                        tt = AGDRTSVTransformer(node)
+                    tt.addRow(node)
+                    bar()
+                logger.debug(f"{nodecount}: {node._output_name}")
+                tt.toTSV(outputDirectory, nodecount)
+                nodecount += 1
     def walk(self):
         # TBD: walk in the expected order (root to leaves)
         for node in self._nodes:

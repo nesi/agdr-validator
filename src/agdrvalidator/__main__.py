@@ -122,7 +122,9 @@ def main():
         print("\nGENERATING TSV FILES...")
         if not project:
             project = "AGDR99999"
-        agdrschema.toTSV(f"{project}_TSV_Output_{datetime.datetime.now().strftime('%Y-%m-%d')}")
+        directory = f"{project}_TSV_Output_{datetime.datetime.now().strftime('%Y-%m-%d')}"
+        print(f"\tDIRECTORY:\t{directory}")
+        agdrschema.toTSV(directory)
 
     # work in progress
     #actual_validator = AGDRValidator(schema, validator)

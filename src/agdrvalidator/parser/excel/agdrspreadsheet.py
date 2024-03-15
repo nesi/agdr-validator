@@ -15,6 +15,8 @@ from agdrvalidator.parser import *
 from agdrvalidator.utils.tabular import * # Table()
 import pandas as pd
 
+from alive_progress import alive_bar
+
 logger = logger.setUp(__name__)
 
 class Agdr(Parser):
@@ -224,15 +226,17 @@ class Agdr(Parser):
 
 
     def parse(self):
-        for index, tabName in enumerate(self.tabs):
-            logger.debug(f"tabName: {tabName}")
-            logger.debug(f"index: {index}")
-            if tabName == self.PROJECT:
-                self._parse_project(self.book[index])
-            elif tabName == self.EXP_ORG:
-                self._parse_exp_org(self.book[index])
-            elif tabName == self.FILE_INST:
-                self._parse_file_inst(self.book[index])
+        with alive_bar(title="\tParsing AGDR spreadsheet", length=len(self.tabs)) as bar:
+            for index, tabName in enumerate(self.tabs):
+                logger.debug(f"tabName: {tabName}")
+                logger.debug(f"index: {index}")
+                if tabName == self.PROJECT:
+                    self._parse_project(self.book[index])
+                elif tabName == self.EXP_ORG:
+                    self._parse_exp_org(self.book[index])
+                elif tabName == self.FILE_INST:
+                    self._parse_file_inst(self.book[index])
+                bar()
 
 
 

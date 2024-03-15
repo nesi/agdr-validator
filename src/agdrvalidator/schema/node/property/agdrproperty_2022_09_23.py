@@ -89,7 +89,7 @@ class AGDR(Property):
         isValid = False
         reason = None
         for av in allowed_values:
-            if value.lower() == av.lower():
+            if str(value).lower() == str(av).lower():
                 self._value = av
                 isValid = True
                 reason = None

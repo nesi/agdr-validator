@@ -7,6 +7,8 @@ from agdrvalidator.schema.node import gen3node as node
 #from enum import Enum
 import json
 
+from alive_progress import alive_bar
+
 logger = logger.setUp(__name__)
 
 
@@ -104,32 +106,35 @@ class Gen3(Parser):
         current_depth = [root]
         next_depth = []
 
-        while current_depth != []:
-            for current_node in current_depth:
-                self._schema.nodes[current_node.name] = current_node
-                for potential_child in list(self._gen3Dictionary):
-                    pchild_node = node.Gen3(self._gen3Dictionary[potential_child], self._gen3Dictionary[potential_child]["id"])
-                    logger.debug(f"_____checking node: [____{pchild_node.name}____] with potential parent: {current_node.name}")
-                    if pchild_node.isChildOf(current_node):
-                        logger.debug(f"found child of {current_node.name}: {pchild_node.name}")
+        with alive_bar(title="\tLoading data dictionary ") as bar:
+            while current_depth != []:
+                for current_node in current_depth:
+                    self._schema.nodes[current_node.name] = current_node
+                    for potential_child in list(self._gen3Dictionary):
+                        pchild_node = node.Gen3(self._gen3Dictionary[potential_child], self._gen3Dictionary[potential_child]["id"])
+                        logger.debug(f"_____checking node: [____{pchild_node.name}____] with potential parent: {current_node.name}")
+                        if pchild_node.isChildOf(current_node):
+                            logger.debug(f"found child of {current_node.name}: {pchild_node.name}")
 
-                        logger.debug(f"_____{pchild_node.name}______")
-                        pchild_node.parse_properties(self._gen3Dictionary[potential_child]["properties"], self._gen3Dictionary[potential_child]["required"], self._schema._terms, self._schema._definitions, self._schema._settings)
-                        #print(f"found child of {current_node.name}: {pchild_node.name}")
-                        current_node.addChild(pchild_node)
-                        pchild_node.addParent(current_node)
-                        next_depth.append(pchild_node)
-                        self._gen3Dictionary.pop(potential_child)
-            else:
-                current_depth = next_depth
-                next_depth = []
+                            logger.debug(f"_____{pchild_node.name}______")
+                            pchild_node.parse_properties(self._gen3Dictionary[potential_child]["properties"], self._gen3Dictionary[potential_child]["required"], self._schema._terms, self._schema._definitions, self._schema._settings)
+                            #print(f"found child of {current_node.name}: {pchild_node.name}")
+                            current_node.addChild(pchild_node)
+                            pchild_node.addParent(current_node)
+                            next_depth.append(pchild_node)
+                            self._gen3Dictionary.pop(potential_child)
+                            bar()
+                else:
+                    current_depth = next_depth
+                    next_depth = []
 
-        # do some post processing; 
-        # some parent / child relationships may have been skipped over
-        for n in self._schema.nodes.values():
-            for parent_link in n.getParentLinks():
-                n.addParent(self._schema.nodes[parent_link.node_id])
-                self._schema.nodes[parent_link.node_id].addChild(n)
+            # do some post processing; 
+            # some parent / child relationships may have been skipped over
+            for n in self._schema.nodes.values():
+                for parent_link in n.getParentLinks():
+                    n.addParent(self._schema.nodes[parent_link.node_id])
+                    self._schema.nodes[parent_link.node_id].addChild(n)
+                    bar()
 
         return self._schema
 

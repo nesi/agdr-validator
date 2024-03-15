@@ -7,3 +7,4 @@ pytest
 pytest-dotenv
 wheel
 xlrd==1.0.0
+alive-progress
