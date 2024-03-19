@@ -205,31 +205,35 @@ class AGDR(Property):
         logger.debug(f"___name:    {self._name}")
         logger.debug(f"___g3name:  {g3name}")
 
-        if self._value == None:
-            if not required:
-                valid = True 
-                reason = None
-            else:
-                valid = False 
-                reason = f"Property {self._output_name} is required, but no value was provided"
-        elif str(type).lower() == "string":
-            if pattern:
-                valid, reason = self._is_pattern_valid()
-            else:
-                valid = True 
-                reason = None
-        elif str(type).lower() == "boolean":
-            valid, reason = self._is_boolean_valid()
-        elif str(type).lower() == "integer":
-            valid, reason = self._is_integer_valid()
-        elif str(type).lower() == "number":
-            valid, reason = self._is_number_valid()
-        if isinstance(type, dict):
-            if 'enum' in type:
-                valid, reason = self._is_enum_valid()
-        elif isinstance(type, list):
-            #___type:    ['string', 'null']
-            valid, reason = self._are_multiple_allowable_types_valid(type)
+
+        if not required and self._value == None:
+            # not required and no value provided
+            valid = True
+            reason = None
+        elif self._value == None:
+            # required and no value provided
+            valid = False 
+            reason = f"Property {self._output_name} is required, but no value was provided"
+        else:
+            # either required and value provided, or not required and value provided
+            if str(type).lower() == "string":
+                if pattern:
+                    valid, reason = self._is_pattern_valid()
+                else:
+                    valid = True 
+                    reason = None
+            elif str(type).lower() == "boolean":
+                valid, reason = self._is_boolean_valid()
+            elif str(type).lower() == "integer":
+                valid, reason = self._is_integer_valid()
+            elif str(type).lower() == "number":
+                valid, reason = self._is_number_valid()
+            if isinstance(type, dict):
+                if 'enum' in type:
+                    valid, reason = self._is_enum_valid()
+            elif isinstance(type, list):
+                #___type:    ['string', 'null']
+                valid, reason = self._are_multiple_allowable_types_valid(type)
 
         # if type is None, there is a problem
 

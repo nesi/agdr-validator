@@ -13,6 +13,7 @@ import agdrvalidator.globals.loglevel as logsettings
 import agdrvalidator.globals.version as version
 
 import os
+import shutil
 import argparse
 import datetime
 import logging
@@ -67,6 +68,27 @@ def getParser():
     parser.add_argument("--version", action="version", version=version.nesi_version)
     return parser
 
+
+def cleanUpFile(filename):
+    '''
+    if a validation report of the same name already exists, remove it
+
+    this is a hacky way to implement overwrite
+    '''
+    try:
+        os.remove(filename)
+    except OSError:
+        pass
+
+def cleanUpDir(dirpath):
+    '''
+    if TSV output for the indicated project already exists, remove it
+
+    this is a hacky way to implement overwrite
+    '''
+    if os.path.exists(dirpath) and os.path.isdir(dirpath):
+        shutil.rmtree(dirpath)
+
 def main():
     parser = getParser()
 
@@ -114,6 +136,7 @@ def main():
     report_file = None 
     if not write_to_stdout:
         report_file = f"{project}_Validation_Report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+    cleanUpFile(report_file)
     validator = AGDRValidator(schema, agdrschema, report_file)
     validator.validate(validation_verbosity)
 
@@ -123,6 +146,7 @@ def main():
         if not project:
             project = "AGDR99999"
         directory = f"{project}_TSV_Output_{datetime.datetime.now().strftime('%Y-%m-%d')}"
+        cleanUpDir(directory)
         print(f"\tDIRECTORY:\t{directory}")
         agdrschema.toTSV(directory)
 
