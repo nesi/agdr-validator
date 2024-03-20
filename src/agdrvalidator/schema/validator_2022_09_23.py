@@ -549,6 +549,7 @@ class AGDRValidator(Schema):
     def _report_node_properties(self, node_type, node, verbose):
         isValid, reasons = node.metadata.validate(verbose)
         if not isValid:
+            self._validation_errors_detected = True
             if self._outputfile:
                 with open(self._outputfile, "a") as f:
                     f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
