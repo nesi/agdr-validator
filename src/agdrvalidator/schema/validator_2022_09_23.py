@@ -127,6 +127,7 @@ class AGDRValidator(Schema):
         # if there were any, it is recorded as a validation error 
         # for a single entry only
         self._node_validation_errors = {} 
+        self._validation_errors_detected = False
 
         self._schemasRelated = False
         self._relateSchemas() # build graph structure
@@ -513,6 +514,17 @@ class AGDRValidator(Schema):
         self._validateSchema(verbose)
         print("...VALIDATION COMPLETE")
 
+
+    def _report_complete(self):
+        if not self._validation_errors_detected:
+            msg = "\tNO ERRORS DETECTED"
+        if self._outputfile:
+            with open(self._outputfile, "a") as f:
+                f.write(f"{msg}\n")
+        else:
+            print(msg)
+
+
     
     def _report_header(self, node_type):
         msg = f"\t{node_type.upper()}"
@@ -585,6 +597,7 @@ class AGDRValidator(Schema):
                         node_id = node.metadata.getProperty('submitter_id').get_value()
                         msg = f"ERROR: duplicate submitter_id found for {node_type} node: {submitter_id}"
                         entry = ValidationEntry(ValidationError.ERROR, msg)
+                        self._validation_errors_detected = True
 
                         if node.name not in self._node_validation_errors:
                             self._node_validation_errors[node.name] = {}
@@ -611,9 +624,12 @@ class AGDRValidator(Schema):
                                     if not header_reported:
                                         self._report_header(node_type)
                                         header_reported = True
+                                    self._validation_errors_detected = True
                                     self._report_node(entry)
 
 
                     # node-based validation (all required properties are present)
                     self._report_node_properties(node_type, node, verbose)
                 bar()
+            else:
+                self._report_complete()

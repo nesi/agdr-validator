@@ -75,6 +75,8 @@ def cleanUpFile(filename):
 
     this is a hacky way to implement overwrite
     '''
+    if not filename:
+        return
     try:
         os.remove(filename)
     except OSError:
@@ -86,6 +88,8 @@ def cleanUpDir(dirpath):
 
     this is a hacky way to implement overwrite
     '''
+    if not dirpath:
+        return
     if os.path.exists(dirpath) and os.path.isdir(dirpath):
         shutil.rmtree(dirpath)
 
