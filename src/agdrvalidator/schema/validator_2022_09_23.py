@@ -516,6 +516,7 @@ class AGDRValidator(Schema):
 
 
     def _report_complete(self):
+        msg = ""
         if not self._validation_errors_detected:
             msg = "\tNO ERRORS DETECTED"
         if self._outputfile:
