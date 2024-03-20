@@ -19,7 +19,7 @@ class AGDR(Property):
     def convertName(cls, name):
         # remove emphasis or indication
         logger.debug(f"convertName: input: {name}")
-        result = name.strip("*").lower().strip()
+        result = str(name).strip("*").lower().strip()
         lookup = {
             # Experiments
             'name or id': 'submitter_id',
