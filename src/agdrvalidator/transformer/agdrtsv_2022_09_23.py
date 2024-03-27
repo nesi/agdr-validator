@@ -110,7 +110,7 @@ class AGDRTSVTransformer(TSVTransformer):
         # strip out empty rows
         self._stripEmptyRows()
 
-        with open (outputfile, 'w') as f:
+        with open (outputfile, 'w', encoding="utf-8") as f:
             f.write("\t".join(self.headers) + "\n")
             for row in self.data:
                 # TODO: this will remove newlines in project descriptions

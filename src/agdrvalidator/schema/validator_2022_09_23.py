@@ -520,7 +520,7 @@ class AGDRValidator(Schema):
         if not self._validation_errors_detected:
             msg = "\tNO ERRORS DETECTED"
         if self._outputfile:
-            with open(self._outputfile, "a") as f:
+            with open(self._outputfile, "a", encoding="utf-8") as f:
                 f.write(f"{msg}\n")
         else:
             print(msg)
@@ -530,7 +530,7 @@ class AGDRValidator(Schema):
     def _report_header(self, node_type):
         msg = f"\t{node_type.upper()}"
         if self._outputfile:
-            with open(self._outputfile, "a") as f:
+            with open(self._outputfile, "a", encoding="utf-8") as f:
                 f.write(node_type.upper())
                 f.write("\n")
         else:
@@ -539,7 +539,7 @@ class AGDRValidator(Schema):
     
     def _report_node(self, validation_entry):
         if self._outputfile:
-            with open(self._outputfile, "a") as f:
+            with open(self._outputfile, "a", encoding="utf-8") as f:
                 f.write(f"\t{validation_entry.message}")
                 f.write("\n")
         else:
@@ -551,7 +551,7 @@ class AGDRValidator(Schema):
         if not isValid:
             self._validation_errors_detected = True
             if self._outputfile:
-                with open(self._outputfile, "a") as f:
+                with open(self._outputfile, "a", encoding="utf-8") as f:
                     f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
                     for reason in reasons:
                         f.write(f"\t{reason}\n")

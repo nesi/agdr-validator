@@ -661,7 +661,7 @@ class AGDR(Schema):
     def report(self, isValid, node, reasons):
         # deprecated in favor of implementation in validator
         return
-        with open(self.report_output, 'a') as f:
+        with open(self.report_output, 'a', encoding="utf-8") as f:
             #f.write(f"Node {name} is invalid: \n\t{reasons}\n")
             if isValid:
                 f.write(f"{node._input_name}: {node._unique_id} \t... OK!\n")
