@@ -78,16 +78,19 @@ with M the Major version, m the minor version and dictv the version of the dicti
 
 #### Example Outputs
 
-Happy path, no errors in the spreadsheet:
+Happy path, no errors in the spreadsheet (note that `-o` pipes the validation 
+report to stdout):
 ```
-$ agdrvalidator -s AGDR_Metadata_Venenivibrio.xlsx -t -p demoproj -v --stdout
-VALIDATOR VERSION: 		1.0.20220923
+(venv) eirian> agdrvalidator -s TestValues2.xlsx -v -o
+VALIDATOR VERSION: 		1.2.20220923
 
+	Parsing AGDR spreadsheet |███| 3 in 0.1s (17.15/s)
+	Loading data dictionary  |████████████████████████████████████████| 54 in 0.0s (9158.23/s)
+	Building metadata graph  |████████████████████████████████████████| 100% in 0.2s (12.72%/s)
 PERFORMING VALIDATION...
-	FILE:		None
+on 12: 	NO ERRORS DETECTED
+	Validating schema        |████████████████████████████████████████| 12/12 [100%] in 0.0s (352.84/s)
 ...VALIDATION COMPLETE
-
-GENERATING TSV FILES...
 ```
 Please provide feedback to the development team if you would like any 
 changes to the output format.
@@ -97,23 +100,27 @@ Sad path, error discovered (duplicate `submitter_id` in Environmental field from
 which is why the error message refers to `metagenome`, `sample`, and `aliquot` nodes even though the 
 spreadsheet error is in the `Environmental` field. 
 ```
-$ agdrvalidator -s AGDR_Metadata_Venenivibrio.xlsx --stdout -v
-VALIDATOR VERSION: 		1.0.20220923
-
-2024-02-29 11:09:14,831 ERROR agdrvalidator.schema.validator_2022_09_23 282: ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
-PERFORMING VALIDATION...
-	METAGENOME
-		ERROR: duplicate submitter_id found for metagenome node: CPc
-		ERROR: duplicate submitter_id found for metagenome node: CPc
-	SAMPLE
-		ERROR: duplicate submitter_id found for sample node: CPc_SAMPLE
-		ERROR: duplicate submitter_id found for sample node: CPc_SAMPLE
-	ALIQUOT
-		ERROR: duplicate submitter_id found for aliquot node: CPc_ALQ
-		ERROR: duplicate submitter_id found for aliquot node: CPc_ALQ
-	READ_GROUP
-		ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
-...VALIDATION COMPLETE
+(venv) eirian> cat AGDR99999_Validation_Report_2024-03-28.txt
+METAGENOME
+	ERROR: duplicate submitter_id found for metagenome node: CPc
+	ERROR: duplicate submitter_id found for metagenome node: CPc
+SAMPLE
+	ERROR: duplicate submitter_id found for sample node: CPc_SAMPLE
+	ERROR: duplicate submitter_id found for sample node: CPc_SAMPLE
+ALIQUOT
+	ERROR: duplicate submitter_id found for aliquot node: CPc_ALQ
+	ERROR: duplicate submitter_id found for aliquot node: CPc_ALQ
+READ_GROUP
+	ERROR:	no REQUIRED link found connecting parent [aliquot] link to child [read_group:AP_RG_R1]
+read_group [AP_RG_R1]
+	barcoding_applied
+		Expected a boolean value, but received [Unknown] instead
+	includes_spike_ins
+		Expected a boolean value, but received [Unknown] instead
+	read_length
+		Expected an integer value, but received [Unknown] instead
+	to_trim_adapter_sequence
+		Expected a boolean value, but received [Unknown] instead
 ```
 
 The expected output format is subject to change, and the `README.md` will 
