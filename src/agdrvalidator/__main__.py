@@ -5,10 +5,6 @@ This file provides the main entry point for the package.
 It provides a command line interface for the package using the argparse module.
 '''
 
-#from agdrvalidator.parser.dictionary.gen3parser import Gen3 as Gen3Dictionary
-#import agdrvalidator.utils.investigation as ivst
-#import agdrvalidator.schema.investigation as divst
-
 import agdrvalidator.globals.loglevel as logsettings
 import agdrvalidator.globals.version as version
 
@@ -21,35 +17,6 @@ import logging
 DATADIR = "test/data"
 DICTIONARY = "gen3.nesi_2022_09_23.json"
 
-#def testmain():
-#    #print(ivst.book)
-#    #print(dir(ivst.pdbook))
-#    #for item in dir(ivst.pdbook):
-#    #    print(item)
-#    #print(ivst.pdbook[1])
-#
-#    # ok, works
-#    #pr = ivst.PrototypeReader()
-#    #pr.readBook(os.path.join(ivst.DATADIR, ivst.VENENIVIBRIO))
-#    #pr.viewBook()
-#
-#    # next investigate parsing dictionary
-#    #pdr = divst.PrototypeDictionaryReader()
-#    #pdr.readDictionary(os.path.join(divst.DATADIR, divst.DICTIONARY))
-#
-#    VENENIVIBRIO = "AGDR_Metadata_Venenivibrio.xlsx"
-#
-#    d = os.path.join(DATADIR, DICTIONARY)
-#    print("dictionary: ", d)
-#    g3d = Gen3Dictionary(d)
-#    g3d.parse()
-#    #g3d.pprint()
-#
-#    # TODO
-#    # first pass through: apply pattern to all properties
-#    excel = os.path.join(DATADIR, VENENIVIBRIO)
-#    agdr = Agdr(excel)
-#    agdr.parse()
 
 def getParser():
     parser = argparse.ArgumentParser(prog="agdrvalidator",
@@ -64,7 +31,6 @@ def getParser():
     parser.add_argument("-l", "--loglevel", type=int, help="verbosity level, for debugging. Default is 0, highest is 3", required=False)
     #parser.add_argument('-v', '--validate', action='count', default=0, help="validate the input file. -v will generate a report with all detected errors; -vv will generate a report with all detected errors and warnings; -vvv will generate a report with all detected errors, warnings, and informational messages. Default is 0.")
     parser.add_argument('-v', '--validate', action='count', default=0, help="validate the input file. -v will generate a report with all detected errors; -vv will generate a report with all detected errors and warnings. Default is 0.")
-    #parser.add_argument("-v", "--version", action="version", version=version.nesi_version)
     parser.add_argument("--version", action="version", version=version.nesi_version)
     return parser
 
@@ -97,7 +63,6 @@ def main():
     parser = getParser()
 
     args = parser.parse_args()
-    #output = args.output
     project = args.project
     if not project:
         project = "AGDR99999"
@@ -131,12 +96,8 @@ def main():
     schema = loadDictionary()
 
     # TBD: add in verbosity settings
-    #agdrschema = AGDRSchema(schema, agdr, report=output, project=project, program=program)
     agdrschema = AGDRSchema(schema, agdr, project=project, program=program)
-    # ideally all validation should occur inside validator
-    #agdrschema.validate()  # do validation from the validator
 
-    # work in progress
     report_file = None 
     if not write_to_stdout:
         report_file = f"{project}_Validation_Report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
@@ -145,7 +106,6 @@ def main():
     validator.validate(validation_verbosity)
 
     if args.tsv:
-        #print("\nConverting to TSV...")
         print("\nGENERATING TSV FILES...")
         if not project:
             project = "AGDR99999"
@@ -154,8 +114,6 @@ def main():
         print(f"\tDIRECTORY:\t{directory}")
         agdrschema.toTSV(directory)
 
-    # work in progress
-    #actual_validator = AGDRValidator(schema, validator)
 
 
 if __name__ == "__main__":

@@ -62,13 +62,11 @@ class AGDR(Node):
             if not property_valid:
                 node_valid = False
                 invalid_properties[property._output_name] = reason
-            #if node_valid:
             if property_valid:
                 req = False 
                 if property._rule:
                     req = property._rule._isRequired
                 logger.info(f"\t\t[  valid  ]: {property._output_name}... {property_valid}")
-                #logger.info(f"\t\t[  valid  ]: {property._output_name}... {property_valid} ... required? {req}")
             else:
                 logger.info(f"\t\t[  PROPERTY INVALID  ]: {property._output_name}... {node_valid}")
         return node_valid, invalid_properties
@@ -152,7 +150,7 @@ class AGDR(Node):
         #allowable_nodes_and_props["processed_file"] = []
         allowable_nodes_and_props["raw"] = ["corresponding_sample_id", "submitter_id"]
         allowable_nodes_and_props["processed_file"] = ["associated_references", "corresponding_sample_id", "submitter_id"]
-        allowable_nodes_and_props["experimental_metadata"] = ["submitter_id", "corresponding_sample_id"]
+        allowable_nodes_and_props["experimental_metadata"] = ["submitter_id", "corresponding_sample_id", "experimental_strategy"]
         allowable_nodes_and_props["read_group"] = ["corresponding_sample_id"]
 
         if self._output_name in allowable_nodes_and_props:

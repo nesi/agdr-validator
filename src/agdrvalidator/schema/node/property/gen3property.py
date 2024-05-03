@@ -23,11 +23,6 @@ PropertyType = Enum("PropertyType",
 #        (many applies to nodes not properties)
 #        etc.
 
-#class Property(abc.ABC):
-#    def __init__(self, name, value=None):
-#        self._name = name
-#        self._value = value
-
 class Gen3(Property):
     def __init__(self, name, value=None, required=False, type=None, pattern=None):
         super().__init__(name, value)

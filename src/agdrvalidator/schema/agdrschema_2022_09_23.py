@@ -14,7 +14,6 @@ This improved implementation should be done for the new AGDR dictionary.
 from agdrvalidator.utils import logger
 import agdrvalidator.utils as utils
 from agdrvalidator.utils.helpers import *
-#from agdrvalidator.schema.gen3schema import Gen3 as Gen3SchemaBase
 from agdrvalidator.schema.base import *
 from agdrvalidator.schema.node.agdrnode_2022_09_23 import AGDR as AGDRNode
 from agdrvalidator.schema.node.property.agdrproperty_2022_09_23 import AGDR as AGDRProperty
@@ -56,7 +55,6 @@ class AGDR(Schema):
             self.program_name = "TAONGA"
 
         self.graph_data = None
-        # set self.graph_data
 
         self._root = None
         self._nodes = {}
@@ -208,7 +206,6 @@ class AGDR(Schema):
         # add raw files
         files = AGDRNode('raw', self.gen3schema.nodes["raw"])
         name = files._output_name
-        #files = self._addProperties(files, self.raw_data.Files)
         files = self._addProperties(files, rfiles)
         for file in files:
             oldprop = file.removeProperty("submitter_id")
@@ -291,15 +288,6 @@ class AGDR(Schema):
         # the metadata template is structured -- experiment submitter_id is included 
         # in the metagenome, organism and environmental tables
 
-        ###############################################################
-        # TODO TODO TODO TODO TODO
-        # The developer (Eirian so far) has only seen examples of 
-        # spreadsheets with metagenome nodes
-        # probably code should be duplicated from metagenome to organism
-        #
-        # test with organism and make appropriate changes
-        # TODO TODO TODO TODO TODO
-        ###############################################################
         g3sample = self.gen3schema.nodes["sample"]
         samples = []
         for node in self._nodes["metagenome"]:
@@ -394,8 +382,6 @@ class AGDR(Schema):
         # TBD - implement this when we have an example for ingest
         #for node in self._nodes["population"]:
         #    pass
-        # TODO
-        # ditto for organism
 
 
         ########################
@@ -418,7 +404,8 @@ class AGDR(Schema):
 
             refprop = exp.removeProperty("associated_references")
             value = ""
-            if refprop:
+            if refprop._value:
+                print(f"refprop: {refprop}")
                 value = refprop._value
                 g3prop = Gen3Property("citation_placeholder", value, required="")
                 agdrprop = AGDRProperty("citation_placeholder", value, g3prop)
@@ -445,7 +432,22 @@ class AGDR(Schema):
             g3prop = Gen3Property("experiments.submitter_id", experiment_id, required="")
             agdrprop = AGDRProperty("experiments.submitter_id", experiment_id, g3prop)
             em.addProperty(agdrprop)
-        
+
+            exp_strat = em.removeProperty("experimental_strategy")._value
+            g3prop = Gen3Property("derived_genetic_data_dynamic_properties", exp_strat, required="")
+            agdrprop = AGDRProperty("derived_genetic_data_dynamic_properties", exp_strat, g3prop)
+            em.addProperty(agdrprop)
+
+            # some weird placeholder value, 'Aligned Reads Index' is the only valid value
+            g3prop = Gen3Property("data_type", "Aligned Reads Index", required="")
+            agdrprop = AGDRProperty("data_type", "Aligned Reads Index", g3prop)
+            em.addProperty(agdrprop)
+
+            # this can be any string, but is requested to be 'observations'
+            # as per AGDR-499
+            g3prop = Gen3Property("data_category", "observations", required="")
+            agdrprop = AGDRProperty("data_category", "observations", g3prop)
+            em.addProperty(agdrprop)
 
 
         ########################
