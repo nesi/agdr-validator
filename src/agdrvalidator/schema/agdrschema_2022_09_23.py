@@ -405,7 +405,6 @@ class AGDR(Schema):
             refprop = exp.removeProperty("associated_references")
             value = ""
             if refprop._value:
-                print(f"refprop: {refprop}")
                 value = refprop._value
                 g3prop = Gen3Property("citation_placeholder", value, required="")
                 agdrprop = AGDRProperty("citation_placeholder", value, g3prop)
