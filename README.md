@@ -43,7 +43,7 @@ example1:
   - the report will be written to a file based on the project code and the current date. Use the `--stdout` flag to display the validation report in the terminal instead.
 - output will be appended to `AGDR99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created, and `AGDR99999` being the project code specified by the `-p` flag. This should always be specified when doing TSV generation as it specifies the project the metadata is associated with.
 - flags may be specified in any order
-- the version of the validator in the format MAJOR.MINOR.SPREADSHEET.DICTIONRY will always be displayed. Any issue with the validator, please report the version number. If `--version` is specified, the validator will display the version number and exit.
+- the version of the validator in the format MAJOR.MINOR.SPREADSHEET.DICTIONARY will always be displayed. Any issue with the validator, please report the version number. If `--version` is specified, the validator will display the version number and exit.
 
 example2: 
 `agdrvalidator -t -p AGDR00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v`
