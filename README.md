@@ -23,7 +23,7 @@ git clone https://git.hpcf.nesi.org.nz/gen3/validator.git
 ### (recommended) Activate virtual environment
 
 `source venv/bin/activate`
-Note: to deactivate the env, just type `deactivate`
+Note: to deactivate the env, just type `source deactivate`
 
 ### Upgrade pip
 
