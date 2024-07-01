@@ -5,13 +5,13 @@ need a schema type that has both a gen3schema and an agdrschema
 this will have the logic to create a graph structure from the 
 agdr schema using the gen3schema
 
-A lot of the work is already done in agdrschema_2022_09_23.py, but 
+A lot of the work is already done in agdrschema_2024_03_25.py, but 
 ideally the validator class should do all the work to relate the
 two schemas together.
 '''
 
 from agdrvalidator.utils import logger 
-from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
+from agdrvalidator.schema.agdrschema_2024_03_25 import AGDR as AGDRSchema
 from agdrvalidator.schema.gen3schema import Gen3 as Gen3Schema
 from agdrvalidator.schema.base import Schema as Schema
 from agdrvalidator import *

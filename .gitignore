@@ -16,5 +16,7 @@ unhandled\ node*
 report.txt
 pattern_app.out
 demo/
+demo*
 AGDR_TSV_Output*
 *_Output_*
+*_Validation_Report_*

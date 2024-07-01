@@ -109,10 +109,14 @@ class AGDR(Property):
         the agdrschema has some logic to "boolify" values. This may not always
         do what we want it to.
         '''
+        # if self._value is already a boolean, return
+        if isinstance(self._value, bool):
+            return True, None
+
         isValid = True 
         reason = None
-        falsy = ['false', 'f', 'no', 'n', '0']
-        truthy = ['true', 't', 'yes', 'y', '1']
+        falsy = ["'false", 'false', 'f', 'no', 'n', '0']
+        truthy = ["'true", 'true', 't', 'yes', 'y', '1']
         if self._value.lower() in falsy:
             self._value = False
         elif self._value.lower() in truthy:

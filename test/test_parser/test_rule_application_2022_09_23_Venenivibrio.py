@@ -1,6 +1,6 @@
 from agdrvalidator.parser.excel.agdrspreadsheet import *
 from agdrvalidator.parser.dictionary.gen3parser import Gen3 as Gen3Dictionary
-from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
+from agdrvalidator.schema.agdrschema_2024_03_25 import AGDR as AGDRSchema
 #from agdrvalidator.schema.gen3schema import Gen3 as Gen3Schema
 
 #import pandas as pd
@@ -11,7 +11,7 @@ from agdrvalidator.schema.agdrschema_2022_09_23 import AGDR as AGDRSchema
 import os
 
 DATADIR = "test/data"
-DICTIONARY = "gen3.nesi_2022_09_23.json"
+DICTIONARY = "gen3.nesi_2024_03_25.json"
 VENENIVIBRIO = "AGDR_Metadata_Venenivibrio.xlsx"
 VENENIVIBRIO_VALID = "AGDR_Metadata_Venenivibrio CORRECTED.xlsx"
 

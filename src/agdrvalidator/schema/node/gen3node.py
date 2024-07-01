@@ -82,19 +82,11 @@ class Gen3(Node):
     def getParentLinks(self):
         return self._parentLinks
 
-    #def isParent(self, node_id):
-    #    for parent in self._parents:
-    #        if parent.node_id == node_id:
-    #            return True
-    #    return False
-
     def isParent(self, node_id):
         #raise NotImplementedError
         if self.name in [x.name for x in self._children]:
             return True
         return False
-
-    # might want isDescendentOf / isAncestorOf
 
     def isChildOf(self, node):
         for parent in self._parentLinks:
@@ -105,10 +97,6 @@ class Gen3(Node):
         return False
 
     def walk(self):
-        # perhaps not needed here? 
-        # should be at schema level
-        # TODO
-        #raise NotImplementedError
         for child in self.getChildren():
             yield child
 
@@ -232,7 +220,6 @@ class Gen3(Node):
                         for item in term:
                             #####
                             raw_property[item] = term[item]
-                    #raw_properties[property] = self._extract_definition_from_ref(lookup, subkey)
                     if isTopLevel:
                         raw_properties[property] = raw_property
                     else:
@@ -242,7 +229,6 @@ class Gen3(Node):
                         raw_properties[property] = lookup[category][key][property]
                     else:
                         raw_properties[key] = {property: lookup[category][key][property]}
-            #print("___")
         else:
             raise AgdrFormatException(f"property {property} has an invalid $ref: {ref}")
 
@@ -268,7 +254,6 @@ class Gen3(Node):
             elif item == "$ref":
                 logger.debug("~~~~ref")
                 extracted = self._extract_properties_from_ref(value[item], terms, definitions, settings, isTopLevel=False)
-                #raw_result[item] = self._extract_properties_from_ref2(value[item], terms, definitions, settings)
                 for prop in extracted:
                     raw_result[prop] = extracted[prop]
             elif item == "enum":
@@ -294,7 +279,6 @@ class Gen3(Node):
             if property == "$ref":
                 nested_properties = self._extract_properties_from_ref(properties[property], terms, definitions, settings, isTopLevel=True)
             else:
-                #logger.warn("skipping property: " + property)
                 p = self._extract_property(properties, property, terms, definitions, settings)
                 unnested_properties.append({property: p})
             # still need to extract terms, but it can be skipped for the moment
@@ -308,7 +292,6 @@ class Gen3(Node):
             if len(nested_properties[property]) == 1:
                 logger.debug("........only one property: " + property)
                 prop = list(nested_properties[property].keys())[0]
-                #nest_prop = nest_prop[property][prop]
 
             logger.debug(f"\t:len of nest_prop: {len(nested_properties[property])}")
             logger.debug(f"\t:property___: {property}\t{nested_properties[property]}")

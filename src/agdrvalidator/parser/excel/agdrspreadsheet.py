@@ -42,8 +42,37 @@ class Agdr(Parser):
         # Files and Instruments
         self.Files = Table()
         self.InstrumentMetadata = Table()
+        self.version = "0"
 
         self.book = self._openBook()
+
+
+    def _extractVersion(self, excel):
+        sheets = [x.lower().strip() for x in excel.sheet_names]
+        version_tab = "nesi_internal_use"
+        index = -1
+        version = "0"
+        if version_tab in sheets:
+            index = sheets.index(version_tab)
+        else:
+            return version
+        
+        book = pd.read_excel(excel, index, header=None)
+        rows, _ = book.shape
+        for r in range(rows):
+            row = book.loc[r,][0]
+            if not row or not pd.notna(row) or str(row).lower() == "nan":
+                continue
+            cell = str(book.loc[r].iat[0]).strip()
+            if "metadata template version" in cell.lower():
+                continue
+            if "please do not modify" in cell.lower():
+                continue
+            version = row
+
+        return version
+
+
 
     def _openBook(self):
         bpath = self.datapath.split("/")[-1]
@@ -51,7 +80,6 @@ class Agdr(Parser):
         logger.debug(f"file extension: {bextension.lower()}")
         if not bextension.lower() == "xlsx":
             raise Exception("File extension must be .xlsx")
-        #self.book = pd.read_excel(self.datapath)
         # check to see if it's excel, if not, throw error
         pdbook = []
         xls = pd.ExcelFile(self.datapath)
@@ -62,6 +90,7 @@ class Agdr(Parser):
                 pdbook.append(pd.read_excel(xls, self.tabs[i]))
             except:
                 raise AgdrFormatException("File is not in AGDR format")
+        self.version = self._extractVersion(xls)
         return pdbook
 
     def _parse_project(self, book):
