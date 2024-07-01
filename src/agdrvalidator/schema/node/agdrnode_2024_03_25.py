@@ -13,7 +13,7 @@ for the new version of the data dictionary.
 '''
 from agdrvalidator.utils import logger
 from agdrvalidator.schema.node.base import Node as Node
-from agdrvalidator.schema.node.property.agdrproperty_2022_09_23 import AGDR as AGDRProperty
+from agdrvalidator.schema.node.property.agdrproperty_2024_03_25 import AGDR as AGDRProperty
 from agdrvalidator import AgdrImplementationException
 
 logger = logger.setUp(__name__)

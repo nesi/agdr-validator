@@ -3,7 +3,7 @@
 
 A schema (collection of nodes) that holds the data read in from an 
 excel spreadsheet. It is compatible with the AGDR dictionary 
-version 2022-09-23 only.
+version 2022-09-23 and 2024-03-25.
 
 An AGDR schema object defined here "has-a" Gen3 schema object, but 
 it would be better to keep those separate and have a Validator 
@@ -15,11 +15,11 @@ from agdrvalidator.utils import logger
 import agdrvalidator.utils as utils
 from agdrvalidator.utils.helpers import *
 from agdrvalidator.schema.base import *
-from agdrvalidator.schema.node.agdrnode_2022_09_23 import AGDR as AGDRNode
-from agdrvalidator.schema.node.property.agdrproperty_2022_09_23 import AGDR as AGDRProperty
+from agdrvalidator.schema.node.agdrnode_2024_03_25 import AGDR as AGDRNode
+from agdrvalidator.schema.node.property.agdrproperty_2024_03_25 import AGDR as AGDRProperty
 from agdrvalidator.schema.node.property.gen3property import Gen3 as Gen3Property
 from agdrvalidator.utils.tabular import * # Table()
-from agdrvalidator.transformer.agdrtsv_2022_09_23 import AGDRTSVTransformer
+from agdrvalidator.transformer.agdrtsv_2024_03_25 import AGDRTSVTransformer
 import datetime
 from agdrvalidator import AgdrNotFoundException
 

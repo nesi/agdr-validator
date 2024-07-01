@@ -9,7 +9,7 @@ import dateutil.parser as dp
 
 def boolify(value):
     # for use in TSV generation
-    falsy = ['false', 'f', 'no', 'n', '0']
+    falsy = ["'false", 'false', 'f', 'no', 'n', '0']
     if not value:
         return "false"
     elif str(value).lower() in falsy:
