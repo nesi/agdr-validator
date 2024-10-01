@@ -152,3 +152,24 @@ If you are using the validator and encounter an error or unexpected behaviour,
 it would be most helpful if you could re-run the command with the 
 `-l 3` option. This will generate a log file with the highest verbosity 
 level, which will help developers to diagnose the issue.
+
+### AGDR Ingest template
+
+The AGDR validator is dependent on 2 major components
+- AGDR dictionary	
+  - the validator is tuned to a particular version of the dictionary (e.g. field soft values). 
+- the NeSI ingest spreadsheet template	
+  - the researchers need to make a copy of the template and fill ONLY the your inputs rows (and any rows below with more data). 
+  The following items MUST not be modified for the validator to work
+  - the ingest spreadsheet needs a version number 
+  - the validator is expecting for a defined version to have a set of tables 
+	- spreadsheet tables are composed of a 
+		- first row: title e.g. Sample. 
+		- second row: a description (defining what this table is about). 
+		- third row: a set of attributes or properties for this table. 
+		- fourth row: a set of descriptions, one per attributes.   
+		- fifth row: a set of examples - note the examples are per attributes and looking at them over few attributes may not make sense scientifically. 
+		- sixth row and below: a number of rows of attributes representing the researcher own data. 
+        The table is finished by an empty row.  
+        Note: another table may be started just below, it is important to keep the rows intact in case of deletion of cells.  
+
