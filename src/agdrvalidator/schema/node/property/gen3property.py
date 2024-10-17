@@ -33,13 +33,17 @@ class Gen3(Property):
 
     def __str__(self):
         representation = {
-            "name": self._input_name,
+            "name": self._name,
+            "_input_name": self._input_name,
             "value": self._value,
             "required": self._isRequired,
             "type": self._type,
             "pattern": self._pattern
         }
         return str(representation)
+
+    def __repr__(self):
+        return self.__str__()
 
     def isRequired(self):
         return self._isRequired

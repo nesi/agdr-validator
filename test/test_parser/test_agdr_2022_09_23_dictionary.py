@@ -2,7 +2,7 @@ import os
 from agdrvalidator.parser.dictionary.gen3parser import Gen3 as Gen3Dictionary
 from agdrvalidator.schema.node.gen3node import Gen3 as Gen3Node
 
-DATADIR = "test/data"
+DATADIR = "test/data/old"
 DICTIONARY = "gen3.nesi_2022_09_23.json"
 
 def test_reading_dictionary_children_set_properly():

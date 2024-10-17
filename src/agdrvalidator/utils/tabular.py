@@ -1,3 +1,10 @@
+'''
+@Author Eirian Perkins 
+Simple data container for excel metadata, used for the 
+original version of the agdrvalidator 
+
+this is now deprecated, use rich_tabular.py instead
+'''
 class Table():
     def __init__(self):
         self.header = []
