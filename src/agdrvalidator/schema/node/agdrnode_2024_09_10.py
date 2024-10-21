@@ -303,10 +303,10 @@ class AGDR(SpreadsheetNode):
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
 
-                # submitter_id
-                g3prop = self.gen3node.getProperty("submitter_id")
+                # name
+                g3prop = self.gen3node.getProperty("name")
                 property = row.get("dataset_name")
-                agdr_submitter_id = AGDRProperty(property, g3prop)
+                agdr_name = AGDRProperty(property, g3prop)
 
                 # date collected
                 # TODO: (Ask Claire, not in dictionary)
@@ -358,17 +358,14 @@ class AGDR(SpreadsheetNode):
                 agdr_doi = AGDRProperty(property, g3prop)
 
                 # application_form
-                # TODO: (Ask Claire, not in spreadsheet)
-                # decision: check with Nat, add potentially
-                g3prop = self.gen3node.getProperty("application_form")
+                g3prop = self.gen3node.getProperty("access_request_form_link")
                 property = None #row.get("application_form")
                 agdr_application_form = AGDRProperty(property, g3prop)
 
-                # name
-                # duplicate of submitter_id... TODO: ask Claire
-                g3prop = self.gen3node.getProperty("name")
-                property = row.get("dataset_name")
-                agdr_name = AGDRProperty(property, g3prop)
+                # submitter_id -- in red at the end
+                g3prop = self.gen3node.getProperty("submitter_id")
+                property = row.get("dataset_id")
+                agdr_submitter_id = AGDRProperty(property, g3prop)
 
                 # properties ordered by order displayed in the portal
                 # (not a requirement, a preference)
