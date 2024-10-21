@@ -861,8 +861,12 @@ class AGDR(SpreadsheetNode):
 
         def populate_metagenome():
             nodes = []
-            sheet_name = self._extract_spreadsheet_name(data)
-            count = 0
+            try:
+                sheet_name = self._extract_spreadsheet_name(data)
+            except Exception:
+                # no data for this entry
+                # (ok, it's either genome or metagenome)
+                return []
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
             for row in data:
                 # properties ordered by order displayed in spreadsheet
