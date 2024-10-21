@@ -1062,14 +1062,14 @@ class AGDR(SpreadsheetNode):
                         property_name = "genome.submitter_id"
                 elif "metagenome" in self._potential_parents and self._potential_parents["metagenome"]:
                     if parent_id in self._potential_parents["metagenome"]:
-                        property_name = "metagenome.submitter_id"
+                        property_name = "metagenomes.submitter_id"
                 if not property_name:
                     # assume whichever one was populated
                     # there will be a validation error
                     if "genome" in self._potential_parents and self._potential_parents["genome"]:
                         property_name = "genome.submitter_id"
                     elif "metagenome" in self._potential_parents and self._potential_parents["metagenome"]:
-                        property_name = "metagenome.submitter_id"
+                        property_name = "metagenomes.submitter_id"
                 g3prop = self.gen3node.getProperty(property_name) # expect this property to be None though
                 agdr_parent = AGDRProperty(property, g3prop)
                 agdr_parent.gen3_name = property_name
