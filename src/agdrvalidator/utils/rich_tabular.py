@@ -29,6 +29,10 @@ class CellLocation(object):
     def __repr__(self):
         return self.__str__()
 
+    def __bool__(self):
+        # CellLocation is "truthy" if both row and column are not None
+        return self.row is not None and self.column is not None
+
 class SpreadsheetProperty(object):
     '''
     This class represents data for a single cell, including 
@@ -111,3 +115,7 @@ class SpreadsheetNode(object):
     def __iter__(self):
         # iterate over rows
         return iter(self.data)
+
+    def update(self, other):
+        # update data with data from other
+        self.data.extend(other.data)

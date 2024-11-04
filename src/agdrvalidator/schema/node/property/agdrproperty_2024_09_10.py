@@ -11,6 +11,9 @@ from agdrvalidator.utils.rich_tabular import CellLocation, SpreadsheetProperty
 from agdrvalidator.schema.node.property.gen3property import *
 from agdrvalidator import * # import AGDR exception types
 
+import re
+from agdrvalidator.utils import is_nan
+
 
 class AGDR(SpreadsheetProperty):
     '''
@@ -60,3 +63,129 @@ class AGDR(SpreadsheetProperty):
 
     def get_value(self):
         return self.data
+
+
+    def validate(self):
+        """Validates the property data based on the Gen3 rule."""
+        if not self.rule:
+            # No rule specified for validation; assume valid.
+            return True, None
+
+        # Initialize validation result
+        valid = True
+        reason = None
+
+        # 1. Pattern Validation (if applicable)
+        if self.rule._pattern:
+            pattern_valid, reason = self._is_pattern_valid()
+            if not pattern_valid:
+                return False, reason
+
+        # 2. Type Validation
+        type_info = self.rule._type
+        if isinstance(type_info, dict):
+            if 'enum' in type_info:
+                valid, reason = self._is_enum_valid()
+            else:
+                valid, reason = False, f"Unsupported type {type_info.get('type')}"
+        elif isinstance(type_info, list):
+            # Handle cases with multiple types allowed (e.g., ["string", "null"])
+            valid, reason = self._are_multiple_allowable_types_valid(type_info)
+        elif type_info == "boolean":
+            valid, reason = self._is_boolean_valid()
+        elif type_info == "integer":
+            valid, reason = self._is_integer_valid()
+        elif type_info == "number":
+            valid, reason = self._is_number_valid()
+        elif type_info == "string":
+            # Handle string type, even if there's no pattern specified
+            valid, reason = self._is_string_valid()
+        else:
+            valid, reason = False, f"Unknown type {type_info}"
+
+        return valid, reason
+
+    def _is_string_valid(self):
+        """Validates that the property data is a string, setting it to an empty string if it's None or NaN."""
+        if self.data is None or is_nan(self.data):
+            self.data = ""  # Set to an empty string if None or NaN
+        else:
+            self.data = str(self.data)  # Ensure the value is treated as a string
+        
+        # Since pattern application is handled separately, any string is valid here
+        return True, None
+
+    def _is_pattern_valid(self):
+        """Validates the property data against a regex pattern if specified."""
+        free_strings = [
+            "submitter_id",
+            "file_name"
+        ]
+        actually_integers = [
+            "file_size",
+        ]
+        if self.gen3_name in actually_integers:
+            return self._is_integer_valid()
+        if self.gen3_name in free_strings:
+            # this is a hack because dictionary parsing is wrong;
+            # currently a UUID regex is applied, but it should be any string
+            return True, None
+        if not self.rule._pattern:
+            return True, None
+        if re.fullmatch(self.rule._pattern, str(self.data)):
+            return True, None
+        else:
+            #return False, f"Value '{self.data}' does not match pattern '{self.rule._pattern}'"
+            return False, f"Value {self.name}; {self.gen3_name} '{self.data}' does not match pattern '{self.rule._pattern}'"
+
+    def _is_enum_valid(self):
+        """Validates if the property data is within allowed enum values."""
+        allowed_values = self.rule._type.get('enum', [])
+        if str(self.data).lower() in (str(av).lower() for av in allowed_values):
+            return True, None
+        return False, f"Value '{self.data}' is not in allowed values {allowed_values}"
+
+    def _is_boolean_valid(self):
+        """Checks if the property data can be interpreted as a boolean."""
+        if isinstance(self.data, bool):
+            return True, None
+        truthy = {'true', 't', 'yes', 'y', '1'}
+        falsy = {'false', 'f', 'no', 'n', '0'}
+        data_str = str(self.data).lower()
+        if data_str in truthy:
+            self.data = True
+            return True, None
+        elif data_str in falsy:
+            self.data = False
+            return True, None
+        return False, f"Expected boolean value but got '{self.data}'"
+
+    def _is_integer_valid(self):
+        """Validates if the property data is an integer."""
+        try:
+            self.data = int(self.data)
+            return True, None
+        except ValueError:
+            return False, f"Expected integer but got '{self.data}'"
+
+    def _is_number_valid(self):
+        """Validates if the property data is numeric."""
+        try:
+            self.data = float(self.data)
+            return True, None
+        except ValueError:
+            return False, f"Expected numeric value but got '{self.data}'"
+
+    def _are_multiple_allowable_types_valid(self, types):
+        """Validates property data against multiple allowed types."""
+        if self.data is None and 'null' in types:
+            return True, None
+        if 'string' in types and isinstance(self.data, str):
+            return True, None
+        if 'integer' in types:
+            return self._is_integer_valid()
+        if 'boolean' in types:
+            return self._is_boolean_valid()
+        if 'number' in types:
+            return self._is_number_valid()
+        return False, f"Value '{self.data}' does not match any allowed types {types}"

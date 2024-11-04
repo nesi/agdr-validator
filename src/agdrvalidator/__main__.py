@@ -80,7 +80,8 @@ def main():
     #from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
     from agdrvalidator.parser.excel.agdrspreadsheet_2024_08_28 import Agdr as AgdrSpreadsheetParser
     from agdrvalidator.schema.agdrschema_2024_09_10 import AGDR as AGDRSchema
-    from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_10 import loadDictionary
+    #from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_10 import loadDictionary
+    from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_24 import loadDictionary
     from agdrvalidator.schema.validator_2024_09_10 import AGDRValidator as AGDRValidator
 
 
@@ -92,7 +93,6 @@ def main():
     schema = loadDictionary()
 
     # is clearly a dictionary
-    #print(f"from main: metadata.nodes: {metadata.nodes}")
     # print type of metadata.nodes:
     #print(f"type of metadata.nodes: {type(metadata.nodes)}")
     agdrschema = AGDRSchema(schema, metadata.nodes, project=project, program=program)

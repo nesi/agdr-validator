@@ -112,6 +112,41 @@ class AGDRRow(SpreadsheetRow):
                 return prop
         return None
 
+    def uniqueId(self):
+        #print(f"uniqueId called from AGDRRow")
+        node_name = self.gen3node.name
+        if node_name == "project":
+            return str(self.getProperty("code").data)
+        return str(self.getProperty("submitter_id").data)
+
+
+    def validate(self):
+        is_valid = True
+        reasons = []
+        
+        for property in self.data:
+            # Skip validation if there's no cell location
+            if not property.location:
+                continue
+
+            # Check if required properties are populated
+            if property.required and not property.data:
+                location_info = f"{self.sheet_name} - {property.location}"
+                reasons.append(f"Missing required field: {property.name} at {location_info}")
+                is_valid = False
+            
+            # Validate the property itself and collect any issues
+            prop_valid, prop_reasons = property.validate()
+            if not prop_valid:
+                is_valid = False
+                #for reason in prop_reasons:
+                #    location_info = f"{self.sheet_name} - {property.location}"
+                #    reasons.append(f"{reason} at {location_info}")
+                location_info = f"{self.sheet_name} - {property.location}"
+                reasons.append(f"{prop_reasons} at {location_info}")
+        
+        return is_valid, reasons
+
 class AGDR(SpreadsheetNode):
     '''
     This class represents all rows of data for a particular 
@@ -157,8 +192,10 @@ class AGDR(SpreadsheetNode):
         self.bad_required_validation_errors = []
 
         #self.data: list[AGDRRow] = self._populate_node(data)
-        the_data = self._populate_node(data)
+        #the_data = self._populate_node(data)
         self.data = self._populate_node(data)
+
+        self._unique_id = None
 
         #print(f"AGDRNode: {self.name}, data={self.data}")
         logger.debug(f"AGDRNode: {self.name}")
@@ -179,8 +216,11 @@ class AGDR(SpreadsheetNode):
         return self.gen3name
 
     def uniqueId(self):
-        raise "Not currently implemented"
-        return self._unique_id
+        # if project, return code
+        # otherwise, return submitter_id
+        #raise "Not currently implemented"
+        print(f"uniqueId called from AGDRNode")
+        return str(self._unique_id)
 
     def getProperty(self, name):
         raise "Not currently implemented"
@@ -205,6 +245,42 @@ class AGDR(SpreadsheetNode):
     def __repr__(self):
         return self.__str__()
 
+    ############################################################################
+    ### validation logic
+    ############################################################################
+    #def validate_required_fields(self):
+    #    """
+    #    Check if all required fields are populated in each AGDRRow of this node.
+    #    """
+    #    for row in self.data:
+    #        for property in row.data:
+    #            if property.required and (property.data is None or property.data == ""):
+    #                error = f"Missing required field '{property.name}' in node '{self.name}'"
+    #                self.validation_errors.append(error)
+    #                # Optionally, print or log immediately
+    #                print(error)
+
+    def validate(self, verbose=False):
+        is_valid = True
+        reasons = []
+        
+        for row in self.data:
+            # Validate each row and collect row-level errors
+            row_valid, row_reasons = row.validate()
+            if not row_valid:
+                is_valid = False
+                reasons.extend(row_reasons)
+                
+                if verbose:
+                    row_info = f"Row [{row.get('submitter_id').data if row.get('submitter_id') else 'Unknown'}]"
+                    reasons.append(f"{row_info}: {', '.join(row_reasons)}")
+        
+        return is_valid, reasons
+        
+
+    ############################################################################
+    ### Code for populating the AGDRNode with metadata from the spreadsheet
+    ############################################################################
 
     def _extract_spreadsheet_name(self, data:SpreadsheetNode):
         sheet_name = set()
@@ -213,7 +289,7 @@ class AGDR(SpreadsheetNode):
         if len(sheet_name) > 1:
             # TODO: add to validation errors, something wrong with the data
             #raise AGDRValidationError("Multiple sheets found for Project node")
-            raise Exception("spreadsheet parsing error; multiple sheets listed for Project node")
+            raise Exception(f"spreadsheet parsing error; multiple sheets listed for {data.name} node")
         return sheet_name.pop()
 
     def _generate_property(self, name, value, g3property:Gen3Property):
@@ -280,7 +356,8 @@ class AGDR(SpreadsheetNode):
                 # (ok, it's either dataaset or external_dataset)
                 return []
 
-            agdr_projects = self._generate_property("project_id", self.project_name, self.gen3node.getProperty("project_id"))
+            agdr_projects = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
+            agdr_project_code = self._generate_property("projects.code", self.project_name, None)
 
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
             for row in data:
@@ -358,13 +435,14 @@ class AGDR(SpreadsheetNode):
                 agdr_doi = AGDRProperty(property, g3prop)
 
                 # application_form
-                g3prop = self.gen3node.getProperty("access_request_form_link")
-                property = None #row.get("application_form")
+                g3prop = self.gen3node.getProperty("application_form")
+                property = row.get("access_request_form_link")
                 agdr_application_form = AGDRProperty(property, g3prop)
 
                 # submitter_id -- in red at the end
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("dataset_id")
+                self._unique_id = property.data
                 agdr_submitter_id = AGDRProperty(property, g3prop)
 
                 # properties ordered by order displayed in the portal
@@ -372,6 +450,7 @@ class AGDR(SpreadsheetNode):
                 row_data = [
                     agdr_submitter_id,
                     agdr_projects,
+                    agdr_project_code,
                     #agdr_date_collected,
                     agdr_doi,
                     agdr_application_form,
@@ -406,6 +485,7 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("dataset_name")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
 
                 # date collected
                 # TODO: (Ask Claire, not in dictionary)
@@ -495,8 +575,16 @@ class AGDR(SpreadsheetNode):
 
         def populate_contributors():
             nodes = []
-            sheet_name = self._extract_spreadsheet_name(data)
+            sheet_name = None
+            try:
+                sheet_name = self._extract_spreadsheet_name(data)
+            except Exception:
+                # no data for this entry
+                # (ok, Contributors optional)
+                return []
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+
+            agdr_project_id = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
             count = 0
             for row in data:
                 # properties ordered by order displayed in spreadsheet
@@ -523,6 +611,7 @@ class AGDR(SpreadsheetNode):
                 submitter_id = dataset.data + "_" + "CONTACT_" + str(count)
                 property = self._generate_property("submitter_id", submitter_id, g3prop)
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
 
                 count += 1
 
@@ -533,16 +622,23 @@ class AGDR(SpreadsheetNode):
                     agdr_dataset,
                     agdr_institution,
                     agdr_name,
-                    agdr_type
+                    agdr_type,
+                    agdr_project_id
                 ]
                 nodes.append(AGDRRow(row_data, self.gen3node, sheet_name))
             return nodes
 
         def populate_experiment():
             nodes = []
-            sheet_name = self._extract_spreadsheet_name(data)
+            # this will throw an exception if there are multiple sheets
+            #sheet_name = self._extract_spreadsheet_name(data)
+
+            # Experiment can be in multiple sheets, so we'll just call it "Experiment" for now
+            sheet_name = "Experiment" 
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+            agdr_project_id = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
             for row in data:
+                #print(f"experiment row: {row}")
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
 
@@ -550,6 +646,7 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("experiment_name")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
 
                 # dataset_name
                 # not able to find dataset? Need to instantiate a Gen3Property object
@@ -568,7 +665,8 @@ class AGDR(SpreadsheetNode):
                     agdr_submitter_id,
                     agdr_dataset,
                     agdr_data_description,
-                    agdr_type
+                    agdr_type,
+                    agdr_project_id
                 ]
                 nodes.append(AGDRRow(row_data, self.gen3node, sheet_name))
             return nodes
@@ -591,6 +689,7 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("specimen_id")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
 
                 # experiment_name
                 g3prop = self.gen3node.getProperty("experiment") # experiment.submitter_id, will be None
@@ -878,6 +977,7 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("sample_id")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
 
                 # experiment_name
                 g3prop = self.gen3node.getProperty("experiment") # experiment.submitter_id
@@ -1046,6 +1146,7 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("sample_id")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
 
                 # genome or metagenome ID that this sample is
                 # TODO TODO TODO TODO TODO
@@ -1242,6 +1343,7 @@ class AGDR(SpreadsheetNode):
                 submitter_id = dataset.data + "_" + "PUBLICATION_" + str(count)
                 property = self._generate_property("submitter_id", submitter_id, g3prop)
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
                 count += 1
 
                 row_data = [
@@ -1278,6 +1380,7 @@ class AGDR(SpreadsheetNode):
                 submitter_id = property.data + "_" + "GENOMICS_ASSAY_" + str(count)
                 property = self._generate_property("submitter_id", submitter_id, g3prop)
                 agdr_submitter_id = AGDRProperty(property, g3prop)
+                self._unique_id = property.data
 
                 # sample
                 # TODO: generate a real Gen3Property object for sample.submitter_id
@@ -1518,7 +1621,7 @@ class AGDR(SpreadsheetNode):
                 nodes.append(AGDRRow(row_data, self.gen3node, sheet_name))
             return nodes
 
-        def populate_supplementary_file(data_category="supplementary file"):
+        def populate_supplementary_file(data_category="Supplementary File"):
             # TODO: Q for Claire:
             # previously, we could have half as many instruments as files, 
             # in the case of having 2 read groups per instrument
@@ -1536,7 +1639,7 @@ class AGDR(SpreadsheetNode):
 
             # actually want to generate a validation error, but scream
             # for now instead
-            if data_category != "supplementary file" and data_category != "raw read file" and data_category != "processed file":
+            if data_category.lower() != "supplementary file" and data_category.lower() != "raw read file" and data_category.lower() != "processed file":
                 raise Exception("Invalid data category for supplementary file: " + data_category)
 
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
@@ -1545,6 +1648,7 @@ class AGDR(SpreadsheetNode):
                 # only populate rows that match the data category, 
                 # there will be different node types in the same table
                 if row.get("data_category").data.lower() != data_category.lower():
+                    count += 1
                     continue
 
                 # doi
@@ -1602,6 +1706,7 @@ class AGDR(SpreadsheetNode):
                 property = row.get("file_name")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 agdr_submitter_id.gen3_name = "submitter_id" # override name
+                self._unique_id = property.data
 
                 # cmc -- don't need to populate
                 # read_pair_number -- raw file only
@@ -1634,10 +1739,10 @@ class AGDR(SpreadsheetNode):
             return nodes
 
         def populate_raw():
-            return populate_supplementary_file(data_category="raw read file")
+            return populate_supplementary_file(data_category="Raw Read File")
 
         def populate_processed_file():
-            return populate_supplementary_file(data_category="processed file")
+            return populate_supplementary_file(data_category="Processed File")
 
 
 

@@ -202,6 +202,8 @@ class Agdr(Parser):
             sn = SpreadsheetNode("genome", data)
             return sn
 
+        #exp_nodes = parse_experiment_node()
+        #print(f"exp_nodes: {exp_nodes}")
         nodes["experiment"] = parse_experiment_node()
         nodes["genome"]    = parse_genomic_node()
         return nodes
@@ -223,6 +225,9 @@ class Agdr(Parser):
             sn = SpreadsheetNode("metagenome", data)
             return sn
         nodes["experiment"] = parse_experiment_node()
+        # append genomic experiments to metagenomic experiments
+        #nodes["experiment"].update(parse_experiment_node())
+
         nodes["metagenome"] = parse_metagenomic_node()
         return nodes
     
@@ -329,7 +334,7 @@ class Agdr(Parser):
         return pd.ExcelFile(self.datapath)
 
 
-    def parse(self):
+    def parse_old(self):
         with alive_bar(title="\tParsing AGDR spreadsheet", length=len(self.tabs)) as bar:
             for index, tabName in enumerate(self.tabs):
                 logger.debug(f"tabName: {tabName}")
@@ -337,4 +342,24 @@ class Agdr(Parser):
                 self.nodes.update(self._parse_tab(tabName))
                 bar()
 
+    def parse(self):
+        def update_nodes(parsed_data):
+            for key in parsed_data:
+                if key in self.nodes:
+                    #print(f"pre: {self.nodes[key]}")
+                    #print(f"____extending {key}")
+                    # extend the list of SpreadsheetRow objects
+                    self.nodes[key].update(parsed_data[key]) 
+                    #print(f"post: {self.nodes[key]}")
+                else:
+                    #print(f"____updating  {key}")
+                    # add the key-value pair to the dictionary
+                    self.nodes[key] = parsed_data[key]
+        with alive_bar(title="\tParsing AGDR spreadsheet", length=len(self.tabs)) as bar:
+            for index, tabName in enumerate(self.tabs):
+                logger.debug(f"tabName: {tabName}")
+                logger.debug(f"index: {index}")
+                #self.nodes.update(self._parse_tab(tabName))
+                update_nodes(self._parse_tab(tabName))
+                bar()
 

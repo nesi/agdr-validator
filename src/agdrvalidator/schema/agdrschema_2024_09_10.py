@@ -269,5 +269,5 @@ class AGDR(Schema):
     def getRootNode(self):
         return self._root
 
-    def walk(self):
-        raise AgdrNotImplementedException("Walk not yet implemented")
+    #def walk(self):
+    #    raise AgdrNotImplementedException("Walk not yet implemented")

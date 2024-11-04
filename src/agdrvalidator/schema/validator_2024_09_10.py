@@ -6,6 +6,7 @@ from agdrvalidator import *
 from agdrvalidator.schema.node.gen3node import RequiredType as RequiredType
 
 from alive_progress import alive_bar
+import numpy as np
 
 import pprint
 from enum import Enum
@@ -14,31 +15,34 @@ from enum import Enum
 logger = logger.setUp(__name__)
 
 def getParentUniqueIdProperties(node_name):
-    pass
-    #props = ["submitter_id"]
-    #if node_name == "publication":
-    #    props = ["project_id"]
-    #if node_name == "core_metadata_collection":
-    #    props = ["projects.code"]
-    #if node_name == "experiment":
-    #    props = ["projects.code"]
-    #if node_name == "metagenome":
-    #    props = ["experiments"]
-    #if node_name == "organism":
-    #    props = ["experiments"]
-    #if node_name == "population_genomics":
-    #    props = ["experiments"]
-    #if node_name == "sample":
-    #    props = ["experiments.submitter_id", "metagenomes.submitter_id", "organisms.submitter_id"]
-    #if node_name == "aliquot":
-    #    props = ["samples.submitter_id"]
-    #if node_name == "read_group":
-    #    props = ["aliquots.submitter_id"]
-    #if node_name == "processed_file":
-    #    props = ["read_groups.submitter_id"]
-    #if node_name == "raw":
-    #    props = ["read_groups.submitter_id"]
-    #return props
+    # TODO: I may have misunderstood what UniqueId is -- maybe it's not the same as submitter_id value
+    #print(f"node_name: {node_name}")
+    props = ["project_id"] # just some default
+    if node_name == "publication":
+        props = ["project_id"]
+    if node_name == "core_metadata_collection":
+        props = ["projects.code"]
+    if node_name == "dataset":
+        props = ["projects.code"]
+    if node_name == "contributor":
+        props = ["dataset.submitter_id"] # TBD: add external_dataset.submitter_id
+    if node_name == "experiment":
+        props = ["project_id"]
+    if node_name == "metagenome":
+        props = ["experiment.submitter_id"]
+    if node_name == "genome":
+        props = ["experiment.submitter_id"]
+    if node_name == "sample":
+        props = ["genomes.submitter_id", "metagenomes.submitter_id"]
+    if node_name == "genomics_assay":
+        props = ["sample.submitter_id"]
+    if node_name == "processed_file":
+        props = ["genomics_assay.submitter_id"]
+    if node_name == "raw":
+        props = ["genomics_assay.submitter_id"]
+    if node_name == "supplementary_file":
+        props = ["experiment.submitter_id"]
+    return props
 
 
 ValidationError = Enum('ValidationError',
@@ -209,24 +213,47 @@ class AGDRValidator(Schema):
             # these are actual metadata values
             key = parent_type.name
             potential_parents = []
+            #print(f"key: {key}")
             if key in self._metadata_graph:
                 potential_parents = self._metadata_graph[key]
             lookup_props = [] 
+            #print(f"all potential parents: {potential_parents}")
             if len(node_list) > 0:
                 lookup_props = getParentUniqueIdProperties(node_list[0].name)
+                #print(f"lookup_props: {lookup_props}")
             else:
                 logger.debug(f"no nodes of type {node_type.name} found in metadata graph")
             for pp in potential_parents:
+                #print(f"potential parent: {pp.metadata.uniqueId()}")
                 # check if parent's primary key matches any of the children 
                 # (this way, we loop through the parents only once)
                 for lookup_prop in lookup_props:
                     for node in node_list:
+                        if not node.metadata.getProperty(lookup_prop):
+                            logger.info(f"no property {lookup_prop} found in node {node.name}")
+                            continue
+                        if node.metadata.getProperty(lookup_prop).get_value() == np.nan:
+                            print(f"property {lookup_prop} is nan in node {node.name}")
+                            continue
+                        #print(f"node: {node.metadata.uniqueId()}")
+                        #print(f"lookup_prop: {lookup_prop}")
+                        #print(f"node metadata: {node.metadata.getProperty(lookup_prop)}")
+                        #print(f"node metadata value: {node.metadata.getProperty(lookup_prop).get_value()}")
+                        #print(f"uniqueId: {pp.metadata.uniqueId().lower()} == {node.metadata.getProperty(lookup_prop).get_value().lower()}")
                         if pp.metadata.uniqueId().lower() == node.metadata.getProperty(lookup_prop).get_value().lower():
                             node.addParent(pp)
                             pp.addChild(node)
                             node_id = node.metadata.getProperty('submitter_id').get_value() 
                             progress_bar(( progress_count + len(connected_node_names) )/ progress_total)
                             connected_node_names.add(node_id)
+                    #for node_type in node_list: # AGDRNode - could have multiple rows
+                    #    for node in node_type:  # AGDRRow - represents an instance of a node
+                    #        if pp.metadata.uniqueId().lower() == node.metadata.getProperty(lookup_prop).get_value().lower():
+                    #            node.addParent(pp)
+                    #            pp.addChild(node)
+                    #            node_id = node.metadata.getProperty('submitter_id').get_value() 
+                    #            progress_bar(( progress_count + len(connected_node_names) )/ progress_total)
+                    #            connected_node_names.add(node_id)
         else:
             orphans = []
             for node in node_list:
@@ -459,6 +486,7 @@ class AGDRValidator(Schema):
                     metadata_to_add.append(ds)
                 else:
                     logger.debug("____bulk adding nodes to graph data____")
+                    self._bulkAddNodesToGraphData(node_type.name, metadata_to_add)
                     progressCount = self._bulkAddParentsToNodesInGraphData(metadata_to_add, node_type, bar, progressCount, nodeCount)
             bar(1.00)
 
@@ -542,22 +570,65 @@ class AGDRValidator(Schema):
             print(f"\t\t{validation_entry.message}")
             pass
 
+    #def _report_node_properties(self, node_type, node, verbose):
+    #    #isValid, reasons = node.metadata.validate(verbose)
+    #    isValid, reasons = node.metadata.validate()
+    #    if not isValid:
+    #        self._validation_errors_detected = True
+    #        if self._outputfile:
+    #            with open(self._outputfile, "a", encoding="utf-8") as f:
+    #                f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
+    #                for reason in reasons:
+    #                    f.write(f"\t{reason}\n")
+    #                    f.write(f"\t\t{reasons[reason]}\n")
+    #        else:
+    #            print(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]")
+    #            for reason in reasons:
+    #                print(f"\t{reason}")
+    #                print(f"\t\t{reasons[reason]}")
+    #        # will in turn call property-based validation
+
+    ## does not work
+    #def _report_node_properties(self, node_type, node, verbose):
+    #    #isValid, reasons = node.metadata.validate(verbose)
+    #    isValid, reasons = node.metadata.validate()
+    #    if not isValid:
+    #        self._validation_errors_detected = True
+    #        if self._outputfile:
+    #            with open(self._outputfile, "a", encoding="utf-8") as f:
+    #                # Write the node header line once
+    #                f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
+    #                
+    #                # Iterate through each reason and write it as a complete message
+    #                for message in reasons:
+    #                    if message:
+    #                        f.write(f"\t{message} - Location: {node.metadata.location}\n")  # Adjusting to include location info
+    #        else:
+    #            print(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]")
+    #            for message in reasons:
+    #                if message:
+    #                    print(f"\t{message} - Location: {node.metadata.location}")
+        
+    # issue with multiple lines
     def _report_node_properties(self, node_type, node, verbose):
-        isValid, reasons = node.metadata.validate(verbose)
+        #isValid, reasons = node.metadata.validate(verbose)
+        isValid, reasons = node.metadata.validate()
         if not isValid:
             self._validation_errors_detected = True
             if self._outputfile:
                 with open(self._outputfile, "a", encoding="utf-8") as f:
+                    # Write the node header line
                     f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
-                    for reason in reasons:
-                        f.write(f"\t{reason}\n")
-                        f.write(f"\t\t{reasons[reason]}\n")
+
+                    # Iterate through each reason in the list and write it
+                    for message in reasons:
+                        if message:  # Only write non-empty messages
+                            f.write(f"\t{message}\n")
             else:
                 print(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]")
-                for reason in reasons:
-                    print(f"\t{reason}")
-                    print(f"\t\t{reasons[reason]}")
-            # will in turn call property-based validation
+                for message in reasons:
+                    if message:
+                        print(f"\t{message}")
         
 
     
@@ -586,16 +657,21 @@ class AGDRValidator(Schema):
         largely to make the validation algorithm more clear where this 
         function is called.
         '''
-        print("called _validateSchema")
-        print(f"metadata graph: {self._metadata_graph}")
+        #print("called _validateSchema")
+        #print(f"metadata graph: {self._metadata_graph}")
 
         with alive_bar(len(self._metadata_graph), title="\tValidating schema       ") as bar:
             for node_type in self.walk():
                 submitter_ids = set()
                 for node in self._metadata_graph[node_type]:
-                    submitter_id = node.metadata.getProperty("submitter_id").get_value()
+                    #print(f"node: {node}")
+                    submitter_id = None
+                    if node.name == "project":
+                        submitter_id = node.metadata.getProperty("code").get_value()
+                    else:
+                        submitter_id = node.metadata.getProperty("submitter_id").get_value()
                     if submitter_id in submitter_ids:
-                        node_id = node.metadata.getProperty('submitter_id').get_value()
+                        node_id = submitter_id
                         msg = f"ERROR: duplicate submitter_id found for {node_type} node: {submitter_id}"
                         entry = ValidationEntry(ValidationError.ERROR, msg)
                         self._validation_errors_detected = True
@@ -613,7 +689,12 @@ class AGDRValidator(Schema):
                 # report validation errors
                 for node in self._metadata_graph[node_type]:
                     # schema-based validation (node connectivity)
-                    node_id = node.metadata.getProperty('submitter_id').get_value()
+                    #node_id = node.metadata.getProperty('submitter_id').get_value()
+                    node_id = None
+                    if node.name == "project":
+                        node_id = node.metadata.getProperty("code").get_value()
+                    else:
+                        node_id = node.metadata.getProperty("submitter_id").get_value()
                     if node_type in self._node_validation_errors:
                         if node_id in self._node_validation_errors[node_type]:
                             # report any connectivity errors, like missing links or duplicate submitter ID
