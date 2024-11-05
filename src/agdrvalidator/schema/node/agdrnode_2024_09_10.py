@@ -129,9 +129,10 @@ class AGDRRow(SpreadsheetRow):
             if not property.location:
                 continue
 
+            location_info = f"sheet [{self.sheet_name}] - [{property.location}]"
+
             # Check if required properties are populated
             if property.required and not property.data:
-                location_info = f"{self.sheet_name} - {property.location}"
                 reasons.append(f"Missing required field: {property.name} at {location_info}")
                 is_valid = False
             
@@ -142,7 +143,6 @@ class AGDRRow(SpreadsheetRow):
                 #for reason in prop_reasons:
                 #    location_info = f"{self.sheet_name} - {property.location}"
                 #    reasons.append(f"{reason} at {location_info}")
-                location_info = f"{self.sheet_name} - {property.location}"
                 reasons.append(f"{prop_reasons} at {location_info}")
         
         return is_valid, reasons

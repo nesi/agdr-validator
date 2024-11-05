@@ -75,6 +75,16 @@ class AGDR(SpreadsheetProperty):
         valid = True
         reason = None
 
+        is_empty = self.data is None or self.data == "" or is_nan(self.data)
+        if is_empty:
+            # purge the nans
+            self.data = None
+
+        if not self.required and is_empty:
+            return valid, reason
+        elif self.required and is_empty:
+            return False, f"Required field '{self.name}' is missing"
+
         # 1. Pattern Validation (if applicable)
         if self.rule._pattern:
             pattern_valid, reason = self._is_pattern_valid()
@@ -119,17 +129,38 @@ class AGDR(SpreadsheetProperty):
         """Validates the property data against a regex pattern if specified."""
         free_strings = [
             "submitter_id",
-            "file_name"
+            "file_name",
+            "habitat",
+            "geo_loc_name",
+            "environmental_medium",
+            "collected_by",
+            "secondary_identifier",
+            "store_cond"
         ]
         actually_integers = [
             "file_size",
+            "latitude_decimal_degrees",
+            "longitude_decimal_degrees"
         ]
+        actually_floats = [
+            "coordinate_uncertainty_in_meters",
+        ]
+        '''
+        environmental_medium
+        '''
+
+        # some dictionary parsing is wrong, here are some hacks to
+        # make it work in the mean time
         if self.gen3_name in actually_integers:
             return self._is_integer_valid()
+
         if self.gen3_name in free_strings:
-            # this is a hack because dictionary parsing is wrong;
             # currently a UUID regex is applied, but it should be any string
             return True, None
+
+        if self.gen3_name in actually_floats:
+            return self._is_number_valid()
+
         if not self.rule._pattern:
             return True, None
         if re.fullmatch(self.rule._pattern, str(self.data)):
@@ -162,6 +193,13 @@ class AGDR(SpreadsheetProperty):
 
     def _is_integer_valid(self):
         """Validates if the property data is an integer."""
+        actually_floats = [
+            "latitude_decimal_degrees",
+            "longitude_decimal_degrees"
+        ]
+        if self.gen3_name in actually_floats:
+            return self._is_number_valid()
+
         try:
             self.data = int(self.data)
             return True, None
