@@ -240,7 +240,7 @@ class AGDRValidator(Schema):
                         #print(f"node metadata: {node.metadata.getProperty(lookup_prop)}")
                         #print(f"node metadata value: {node.metadata.getProperty(lookup_prop).get_value()}")
                         #print(f"uniqueId: {pp.metadata.uniqueId().lower()} == {node.metadata.getProperty(lookup_prop).get_value().lower()}")
-                        if pp.metadata.uniqueId().lower() == node.metadata.getProperty(lookup_prop).get_value().lower():
+                        if pp.metadata.uniqueId().lower() == str(node.metadata.getProperty(lookup_prop).get_value()).lower():
                             node.addParent(pp)
                             pp.addChild(node)
                             node_id = node.metadata.getProperty('submitter_id').get_value() 
