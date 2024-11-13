@@ -11,3 +11,9 @@ class AgdrImplementationException(Exception):
 
 class AgdrNotFoundException(Exception):
     pass
+
+class BadMetadataSpreadhsheetException(Exception):
+    pass
+
+class AgdrNotImplementedException(Exception):
+    pass

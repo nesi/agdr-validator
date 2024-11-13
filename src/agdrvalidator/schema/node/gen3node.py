@@ -70,9 +70,18 @@ class Gen3(Node):
         self._last_lookup_table = None
         self._properties = []
 
+    def __str__(self):
+        properties_str = ',\n\t '.join(str(prop) for prop in self._properties)
+        return f"Gen3 Node: {self.name}, Properties: [{properties_str}]"
+
+    def __repr__(self):
+        properties_repr = ',\n\t '.join(str(prop) for prop in self._properties)
+        return f"Gen3(name={self.name!r}, properties=[{properties_repr}])"
+
     def getProperty(self, name):
         for prop in self._properties:
-            if name == prop._name:
+            #print(f"___+_+_+_______________property: {prop._name}")
+            if name == prop._name or name == prop._input_name:
                 return prop
         return None
 

@@ -77,21 +77,25 @@ def main():
     validation_verbosity = args.validate
     write_to_stdout = args.stdout
 
-    from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
-    from agdrvalidator.schema.agdrschema_2024_03_25 import AGDR as AGDRSchema
-    from agdrvalidator.data.dictionaries.agdrdictionary_2024_03_25 import loadDictionary
-    from agdrvalidator.schema.validator_2024_03_25 import AGDRValidator as AGDRValidator
+    #from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
+    from agdrvalidator.parser.excel.agdrspreadsheet_2024_08_28 import Agdr as AgdrSpreadsheetParser
+    from agdrvalidator.schema.agdrschema_2024_09_10 import AGDR as AGDRSchema
+    #from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_10 import loadDictionary
+    from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_24 import loadDictionary
+    from agdrvalidator.schema.validator_2024_09_10 import AGDRValidator as AGDRValidator
 
 
-    excel = args.spreadsheet
-    agdr = Agdr(excel)
-    print(f"VALIDATOR VERSION: \t\t{version.version(agdr.version)}\n")
-    agdr.parse()
+    excelpath = args.spreadsheet
+    metadata = AgdrSpreadsheetParser(excelpath)
+    print(f"VALIDATOR VERSION: \t\t{version.version(metadata.version)}\n")
+    metadata.parse()
 
     schema = loadDictionary()
 
-    # TBD: add in verbosity settings
-    agdrschema = AGDRSchema(schema, agdr, project=project, program=program)
+    # is clearly a dictionary
+    # print type of metadata.nodes:
+    #print(f"type of metadata.nodes: {type(metadata.nodes)}")
+    agdrschema = AGDRSchema(schema, metadata.nodes, project=project, program=program)
 
     report_file = None 
     if not write_to_stdout:

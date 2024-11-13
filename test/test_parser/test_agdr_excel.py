@@ -12,7 +12,7 @@ import tempfile
 import os
 
 
-DATADIR = "test/data"
+DATADIR = "test/data/old"
 VENENIVIBRIO = "AGDR_Metadata_Venenivibrio.xlsx"
 HOIHO = "AGDR_00029_Metadata_Hoiho_202208.xlsx"
 

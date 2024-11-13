@@ -10,7 +10,7 @@ from agdrvalidator.schema.agdrschema_2024_03_25 import AGDR as AGDRSchema
 #import tempfile
 import os
 
-DATADIR = "test/data"
+DATADIR = "test/data/old"
 DICTIONARY = "gen3.nesi_2024_03_25.json"
 VENENIVIBRIO = "AGDR_Metadata_Venenivibrio.xlsx"
 VENENIVIBRIO_VALID = "AGDR_Metadata_Venenivibrio CORRECTED.xlsx"

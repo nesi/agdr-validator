@@ -1,10 +1,11 @@
-numpy==1.24.1
+numpy==2.1.1
 openpyxl
-pandas==1.5.2
+pandas==2.2.2
 pluggy
 python-dotenv
 pytest
 pytest-dotenv
-wheel
-xlrd==1.0.0
+xlrd==2.0.1
 alive-progress
+wheel
+openpyxl
