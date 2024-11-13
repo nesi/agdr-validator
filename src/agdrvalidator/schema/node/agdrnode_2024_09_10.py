@@ -557,7 +557,7 @@ class AGDR(SpreadsheetNode):
                     agdr_projects,
                     agdr_bioproject_accession,
                     agdr_biosample_accession,
-                    #agdr_date_collected,
+                    agdr_date_collected,
                     agdr_contact,
                     agdr_dataset_accession,
                     agdr_detailed_description,
@@ -623,7 +623,7 @@ class AGDR(SpreadsheetNode):
                     agdr_institution,
                     agdr_name,
                     agdr_type,
-                    agdr_project_id
+                    agdr_project_id,
                 ]
                 nodes.append(AGDRRow(row_data, self.gen3node, sheet_name))
             return nodes
