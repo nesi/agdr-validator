@@ -36,18 +36,18 @@ Note: to deactivate the env, just type `source deactivate`
 ### Run validator on input spreadsheet
 example1: 
 
-`agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v -p AGDR99999`
+`agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v -p 99999`
 
 - the `-v` option is required in order to perform validation, or else validation is skipped
   - using `-vv` will increase **validation** verbosity. By default, only errors are displayed. `-vv` will also display warnings and informational messages, for instance if optional links between nodes are not set.
   - the report will be written to a file based on the project code and the current date. Use the `--stdout` flag to display the validation report in the terminal instead.
-- output will be appended to `AGDR99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created, and `AGDR99999` being the project code specified by the `-p` flag. This should always be specified when doing TSV generation as it specifies the project the metadata is associated with.
+- output will be appended to `99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created, and `99999` being the project code specified by the `-p` flag. This should always be specified when doing TSV generation as it specifies the project the metadata is associated with.
 - flags may be specified in any order
 - the version of the validator in the format MAJOR.MINOR.SPREADSHEET.DICTIONARY will always be displayed. Any issue with the validator, please report the version number. If `--version` is specified, the validator will display the version number and exit.
 
 example2: 
-`agdrvalidator -t -p AGDR00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v`
-- as well as being validated, TSV files will be created for the program TAONGA and project AGDR00051
+`agdrvalidator -t -p 00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v`
+- as well as being validated, TSV files will be created for the program NZ and project 00051
 
 ```
 $ agdrvalidator --help
@@ -61,9 +61,9 @@ options:
                         path to excel input file containing metadata
   -o, --stdout          write validation report to stdout, otherwise a filename will be generated based on the project code and date of report generation
   -p PROJECT, --project PROJECT
-                        Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.
+                        Project code, e.g. XXXXX, required for TSV output. If unspecified, project code will default to 99999.
   -r PROGRAM, --program PROGRAM
-                        Program name, required for TSV output. If unspecified, program name will default to TAONGA
+                        Program name, required for TSV output. If unspecified, program name will default to NZ
   -t, --tsv             include this flag to convert spreadsheet to TSV output for Gen3 ingest
   -l LOGLEVEL, --loglevel LOGLEVEL
                         verbosity level, for debugging. Default is 0, highest is 3
