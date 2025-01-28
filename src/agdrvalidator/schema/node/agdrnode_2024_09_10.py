@@ -768,6 +768,10 @@ class AGDR(SpreadsheetNode):
                 property = row.get("** age")
                 agdr_age = AGDRProperty(property, g3prop)
 
+                g3prop = self.gen3node.getProperty("age_unit")
+                property = row.get("age_unit")
+                agdr_age_unit = AGDRProperty(property, g3prop)
+
                 # ** dev_stage
                 g3prop = self.gen3node.getProperty("developmental_stage")
                 property = row.get("** dev_stage")
@@ -914,6 +918,7 @@ class AGDR(SpreadsheetNode):
                     agdr_geo_loc_name,
                     agdr_experiment,
                     agdr_age,
+                    agdr_age_unit,
                     agdr_basis_of_record,
                     agdr_biomaterial_provider,
                     agdr_birth_date,
