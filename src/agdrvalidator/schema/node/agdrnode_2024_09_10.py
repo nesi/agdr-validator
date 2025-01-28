@@ -333,6 +333,8 @@ class AGDR(SpreadsheetNode):
                 g3_property = self.gen3node.getProperty("detailed_description")
                 property = row.get("project_description")
                 agdr_description = AGDRProperty(property, g3_property)
+
+                g3_property = self.gen3node.getProperty("name")
                 property = row.get("name")
                 agdr_name = AGDRProperty(property, g3_property)
                 # need to create a property list
