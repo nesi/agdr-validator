@@ -28,13 +28,14 @@ import datetime
 from agdrvalidator import * # import AGDR exception types
 
 from agdrvalidator.transformer.agdrtsv_2024_09_10 import AGDRTSVTransformer
+from agdrvalidator.schema.agdrspreadsheet_validator import AGDRSpreadsheetValidator
 
 from alive_progress import alive_bar
 
 logger = logger.setUp(__name__)
 
 class AGDR(Schema):
-    def __init__(self, gen3_dictionary, spreadsheet_metadata: Dict[str, AGDRNode], report=None, project="AGDR99999", program="TAONGA"):
+    def __init__(self, gen3_dictionary, spreadsheet_metadata: Dict[str, AGDRNode], report=None, project="AGDR99999", program="NZ"):
         #self._root = root
         self._gen3_dictionary = gen3_dictionary
         #self._metadata = self._consolidate(spreadsheet_metadata)
@@ -57,6 +58,10 @@ class AGDR(Schema):
         self.report_output = report
         if not report:
             self.report_output = f"{self.project_code}_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+
+        self.spreadsheet_report_output = f"{self.project_code}_spreadsheet_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+
+        # TODO: add spreadsheet validation report
 
 
         self.program_name = program
@@ -189,6 +194,12 @@ class AGDR(Schema):
         self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
         node = "processed_file"
         self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+
+
+        # next, validate the spreadsheet itself
+        #asv = AGDRSpreadsheetValidator()
+        #asv.add(self._nodes)
+        #asv.validate(self.spreadsheet_report_output)
 
     def getNodeCount(self):
         count = 0

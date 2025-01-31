@@ -44,7 +44,10 @@ class AGDRTSVTransformer(TSVTransformer):
     def _buildHeaderFromProps(self, node):
         headers = set()
         for property in node:
+            #if node.gen3_name == "project":
+            #    print(f"iterating over property {property.name} : {property.gen3_name}")
             if not property.gen3_name:
+                #print(f"property {property.name} has no gen3_name")
                 continue
             col_name = property.gen3_name
             if property.required:

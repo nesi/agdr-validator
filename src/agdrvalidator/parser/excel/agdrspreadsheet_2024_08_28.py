@@ -16,11 +16,14 @@ import openpyxl
 
 from alive_progress import alive_bar
 
+from agdrvalidator.schema.agdrspreadsheet_validator import AGDRSpreadsheetValidator
+import datetime
+
 logger = logger.setUp(__name__)
 
 
 class Agdr(Parser):
-    def __init__(self, datapath):
+    def __init__(self, datapath, project):
         self.datapath = datapath
         self.tabs = ["project",
                      "experiments_genomic",
@@ -34,6 +37,10 @@ class Agdr(Parser):
         self.version = self._parse_nesi_internal_use()
         # dictionary of node name -> SpreadsheetNode object
         self.nodes = {}
+
+        self.asv = AGDRSpreadsheetValidator()
+        #self.spreadsheet_report_output = f"{self.project_code}_spreadsheet_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+        self.spreadsheet_report_output = f"{project}_spreadsheet_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
 
     def _seek(self, sheet_name, text):
         '''
@@ -87,16 +94,18 @@ class Agdr(Parser):
             sp = SpreadsheetProperty(fields[i], None, cl, required)
             data.append(sp)
         #return fields[1:]
+        #print(f"data: {data}")
         return SpreadsheetRow(data, sheet_name)
 
 
     #def _seek_data(self, sheet_name, startrow, headers):
-    def _seek_data(self, sheet_name, startrow):
+    def _seek_data(self, sheet_name, startrow, node_name):
         '''
         helper method for extracting data for a particular node
         '''
         sheet = pd.read_excel(self.pd_excel, sheet_name)
         headers = self._seek_fields(sheet_name, startrow)
+        self.asv.add(node_name, headers)
         self.headers = headers
 
         rows, _ = sheet.shape
@@ -156,26 +165,26 @@ class Agdr(Parser):
         nodes = {}
         def parse_project_node():
             startrow = self._seek(tab_name, "Project Information")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "project")
             sn = SpreadsheetNode("project", data)
             return sn
 
         def parse_dataset_node():
             startrow = self._seek(tab_name, "Datasets")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "dataset")
             sn = SpreadsheetNode("dataset", data)
             return sn
 
         def parse_external_dataset_node():
             startrow = self._seek(tab_name, "External Datasets")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "external_dataset")
             sn = SpreadsheetNode("external_dataset", data)
             return sn
 
         def parse_contributors_node():
             startrow = self._seek(tab_name, "Contributors")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "contributors")
             sn = SpreadsheetNode("contributor", data)
             return sn
 
@@ -192,13 +201,13 @@ class Agdr(Parser):
         def parse_experiment_node():
             startrow = self._seek(tab_name, "Experiments")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "experiment")
             sn = SpreadsheetNode("experiment", data)
             return sn
         def parse_genomic_node():
             startrow = self._seek(tab_name, "Genomes")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "genome")
             sn = SpreadsheetNode("genome", data)
             return sn
 
@@ -215,13 +224,13 @@ class Agdr(Parser):
         def parse_experiment_node():
             startrow = self._seek(tab_name, "Experiments")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "experiment")
             sn = SpreadsheetNode("experiment", data)
             return sn
         def parse_metagenomic_node():
             startrow = self._seek(tab_name, "Metagenomes")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "metagenome")
             sn = SpreadsheetNode("metagenome", data)
             return sn
         nodes["experiment"] = parse_experiment_node()
@@ -240,7 +249,7 @@ class Agdr(Parser):
         tab_name = "samples"
         nodes = {}
         def parse_sample_node():
-            data = self._seek_data(tab_name, 0)
+            data = self._seek_data(tab_name, 0, "sample")
             sn = SpreadsheetNode("sample", data)
             return sn
         nodes["sample"] = parse_sample_node()
@@ -251,7 +260,7 @@ class Agdr(Parser):
         tab_name = "files_instruments"
         nodes = {}
         def parse_file_node():
-            data = self._seek_data(tab_name, 0)
+            data = self._seek_data(tab_name, 0, "supplementary_file")
             sn = SpreadsheetNode("file", data)
             return sn
         def parse_instrument_node():
@@ -263,7 +272,7 @@ class Agdr(Parser):
             startrow = self._seek(tab_name, "Instrument and sequencing metadata")
             logger.debug(f"startrow: {startrow}")
             data = self._seek_data(tab_name, startrow)
-            sn = SpreadsheetNode("instruments", data)
+            sn = SpreadsheetNode("instruments", data, "genomics_assay")
             return sn
         nodes["file"]       = parse_file_node()
         #nodes["instrument"] = parse_instrument_node()
@@ -362,4 +371,6 @@ class Agdr(Parser):
                 #self.nodes.update(self._parse_tab(tabName))
                 update_nodes(self._parse_tab(tabName))
                 bar()
+
+        self.asv.validate(self.spreadsheet_report_output)
 

@@ -396,7 +396,7 @@ class AGDR(SpreadsheetNode):
 
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
-                property = row.get("datatset_description")
+                property = row.get("dataset_description")
                 agdr_detailed_description = AGDRProperty(property, g3prop)
 
                 # investigator_affiliation
@@ -498,7 +498,7 @@ class AGDR(SpreadsheetNode):
 
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
-                property = row.get("datatset_description")
+                property = row.get("dataset_description")
                 agdr_detailed_description = AGDRProperty(property, g3prop)
 
                 # investigator_affiliation
@@ -1053,9 +1053,8 @@ class AGDR(SpreadsheetNode):
                 agdr_coordinate_uncertainty_in_meters = AGDRProperty(property, g3prop)
 
                 # samp_collect_device
-                # TODO: should be named specimen_collect_device?
                 g3prop = self.gen3node.getProperty("specimen_collect_device")
-                property = row.get("samp_collect_device")
+                property = row.get("specimen_collect_device")
                 agdr_specimen_collect_device = AGDRProperty(property, g3prop)
 
                 # collected_by
