@@ -1,20 +1,21 @@
 '''
-@Author Eirian Perkins
-
 this file contains data container classes used to represent 
 metadata from excel workbook input.
 '''
 
-from agdrvalidator.utils import logger
-from agdrvalidator.utils.rich_tabular import SpreadsheetRow, SpreadsheetNode, SpreadsheetProperty, CellLocation
-#from agdrvalidator.schema.node.property.gen3property import *
-from agdrvalidator.schema.node.property.agdrproperty_2024_09_10 import AGDR as AGDRProperty
-from agdrvalidator.schema.node.property.gen3property import Gen3 as Gen3Property
-from agdrvalidator.schema.node.gen3node import Gen3 as Gen3Node
-from agdrvalidator import * # import AGDR exception types
-
 from alive_progress import alive_bar
 
+from agdrvalidator import *  # import AGDR exception types
+from agdrvalidator.schema.node.gen3node import Gen3 as Gen3Node
+#from agdrvalidator.schema.node.property.gen3property import *
+from agdrvalidator.schema.node.property.agdrproperty_2024_09_10 import \
+    AGDR as AGDRProperty
+from agdrvalidator.schema.node.property.gen3property import \
+    Gen3 as Gen3Property
+from agdrvalidator.utils import logger
+from agdrvalidator.utils.rich_tabular import (CellLocation, SpreadsheetNode,
+                                              SpreadsheetProperty,
+                                              SpreadsheetRow)
 
 logger = logger.setUp(__name__)
 
@@ -171,7 +172,7 @@ class AGDR(SpreadsheetNode):
             return lookup[name]
         return name
 
-    def __init__(self, name, data, gen3node:Gen3Node, project="AGDR999999", program="TAONGA", parents={}):
+    def __init__(self, name, data, gen3node:Gen3Node, project="AGDR999999", program="NZ", parents={}):
         self.name = name
         self.gen3name = AGDR.convertName(name)
         self.gen3node = gen3node

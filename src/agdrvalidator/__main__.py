@@ -5,14 +5,14 @@ This file provides the main entry point for the package.
 It provides a command line interface for the package using the argparse module.
 '''
 
-import agdrvalidator.globals.loglevel as logsettings
-import agdrvalidator.globals.version as version
-
-import os
-import shutil
 import argparse
 import datetime
 import logging
+import os
+import shutil
+
+import agdrvalidator.globals.loglevel as logsettings
+import agdrvalidator.globals.version as version
 
 
 def getParser():
@@ -22,7 +22,7 @@ def getParser():
     parser.add_argument("-s", "--spreadsheet", help="path to excel input file containing metadata", required=True)
     parser.add_argument("-o", "--stdout", help="write validation report to stdout, otherwise a filename will be generated based on the project code and date of report generation", required=False, action='store_true')
     parser.add_argument("-p", "--project", help="Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.", required=False)
-    parser.add_argument("-r", "--program", help="Program name, required for TSV output. If unspecified, program name will default to TAONGA", required=False)
+    parser.add_argument("-r", "--program", help="Program name, required for TSV output. If unspecified, program name will default to NZ", required=False)
     parser.add_argument("-t", "--tsv", help="include this flag to convert spreadsheet to TSV output for Gen3 ingest", required=False, action='store_true')
     parser.add_argument("-l", "--loglevel", type=int, help="verbosity level, for debugging. Default is 0, highest is 3", required=False)
     parser.add_argument('-v', '--validate', action='count', default=0, help="validate the input file. -v will generate a report with all detected errors; -vv will generate a report with all detected errors and warnings. Default is 0.")
@@ -78,11 +78,14 @@ def main():
     write_to_stdout = args.stdout
 
     #from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
-    from agdrvalidator.parser.excel.agdrspreadsheet_2024_08_28 import Agdr as AgdrSpreadsheetParser
-    from agdrvalidator.schema.agdrschema_2024_09_10 import AGDR as AGDRSchema
     #from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_10 import loadDictionary
-    from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_24 import loadDictionary
-    from agdrvalidator.schema.validator_2024_09_10 import AGDRValidator as AGDRValidator
+    from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_24 import \
+        loadDictionary
+    from agdrvalidator.parser.excel.agdrspreadsheet_2024_08_28 import \
+        Agdr as AgdrSpreadsheetParser
+    from agdrvalidator.schema.agdrschema_2024_09_10 import AGDR as AGDRSchema
+    from agdrvalidator.schema.validator_2024_09_10 import \
+        AGDRValidator as AGDRValidator
 
 
     excelpath = args.spreadsheet

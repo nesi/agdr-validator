@@ -11,19 +11,22 @@ object that "has-a" Gen3 schema and "has-a" AGDR schema.
 
 This improved implementation should be done for the new AGDR dictionary.
 '''
-from agdrvalidator.utils import logger
-import agdrvalidator.utils as utils
-from agdrvalidator.utils.helpers import *
-from agdrvalidator.schema.base import *
-from agdrvalidator.schema.node.agdrnode_2024_03_25 import AGDR as AGDRNode
-from agdrvalidator.schema.node.property.agdrproperty_2024_03_25 import AGDR as AGDRProperty
-from agdrvalidator.schema.node.property.gen3property import Gen3 as Gen3Property
-from agdrvalidator.utils.tabular import * # Table()
-from agdrvalidator.transformer.agdrtsv_2024_03_25 import AGDRTSVTransformer
 import datetime
-from agdrvalidator import AgdrNotFoundException
 
 from alive_progress import alive_bar
+
+import agdrvalidator.utils as utils
+from agdrvalidator import AgdrNotFoundException
+from agdrvalidator.schema.base import *
+from agdrvalidator.schema.node.agdrnode_2024_03_25 import AGDR as AGDRNode
+from agdrvalidator.schema.node.property.agdrproperty_2024_03_25 import \
+    AGDR as AGDRProperty
+from agdrvalidator.schema.node.property.gen3property import \
+    Gen3 as Gen3Property
+from agdrvalidator.transformer.agdrtsv_2024_03_25 import AGDRTSVTransformer
+from agdrvalidator.utils import logger
+from agdrvalidator.utils.helpers import *
+from agdrvalidator.utils.tabular import *  # Table()
 
 logger = logger.setUp(__name__)
 
@@ -52,7 +55,7 @@ class AGDR(Schema):
 
         self.program_name = program
         if not self.program_name:
-            self.program_name = "TAONGA"
+            self.program_name = "NZ"
 
         self.graph_data = None
 

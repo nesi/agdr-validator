@@ -47,7 +47,7 @@ example1:
 
 example2: 
 `agdrvalidator -t -p AGDR00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v`
-- as well as being validated, TSV files will be created for the program TAONGA and project AGDR00051
+- as well as being validated, TSV files will be created for the program NZ and project AGDR00051
 
 ```
 $ agdrvalidator --help
@@ -63,7 +63,7 @@ options:
   -p PROJECT, --project PROJECT
                         Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.
   -r PROGRAM, --program PROGRAM
-                        Program name, required for TSV output. If unspecified, program name will default to TAONGA
+                        Program name, required for TSV output. If unspecified, program name will default to NZ
   -t, --tsv             include this flag to convert spreadsheet to TSV output for Gen3 ingest
   -l LOGLEVEL, --loglevel LOGLEVEL
                         verbosity level, for debugging. Default is 0, highest is 3
