@@ -358,7 +358,8 @@ class AGDR(SpreadsheetNode):
                 return []
 
             agdr_projects = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
-            agdr_project_code = self._generate_property("projects.code", self.project_name, None)
+            agdr_project_code = self._generate_property("projects.code", f"{self.project_name}", self.gen3node.getProperty("project_id"))
+            agdr_project_code.gen3_name = "projects.code" # override name
 
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
             for row in data:
@@ -476,8 +477,12 @@ class AGDR(SpreadsheetNode):
                 # no data for this entry
                 # (ok, it's either dataaset or external_dataset)
                 return []
+            
+            agdr_projects = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
+            agdr_project_code = self._generate_property("projects.code", f"{self.project_name}", self.gen3node.getProperty("project_id"))
+            agdr_project_code.gen3_name = "projects.code" # override name
+            
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
-            agdr_projects = self._generate_property("projects", self.project_name, self.gen3node.getProperty("projects"))
             for row in data:
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
@@ -556,6 +561,7 @@ class AGDR(SpreadsheetNode):
                 row_data = [
                     agdr_submitter_id,
                     agdr_projects,
+                    agdr_project_code,
                     agdr_bioproject_accession,
                     agdr_biosample_accession,
                     #agdr_date_collected,

@@ -8,6 +8,7 @@ import datetime as dt
 import logging
 import os
 import shutil
+import sys
 
 import agdrvalidator.globals.loglevel as logsettings
 import agdrvalidator.globals.version as version
@@ -90,9 +91,13 @@ def main():
 
 
     excelpath = args.spreadsheet
-    metadata = AgdrSpreadsheetParser(excelpath)
-    print(f"VALIDATOR VERSION: \t\t{version.version(metadata.version)}\n")
-    metadata.parse()
+    try:
+        metadata = AgdrSpreadsheetParser(excelpath)
+        print(f"VALIDATOR VERSION: \t\t{version.version(metadata.version)}\n")
+        metadata.parse()
+    except FileNotFoundError:
+        print(f"The file at {excelpath} was not found. Please check the file path and try again.")
+        sys.exit(1)
 
     schema = loadDictionary()
 

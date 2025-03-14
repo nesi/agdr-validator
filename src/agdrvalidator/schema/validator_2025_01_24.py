@@ -19,6 +19,8 @@ def getParentUniqueIdProperties(node_name):
     props = ["project_id"] # just some default
     if node_name == "publication":
         props = ["project_id"]
+    if node_name == "external_dataset":
+        props = ["projects.code"]
     if node_name == "core_metadata_collection":
         props = ["projects.code"]
     if node_name == "dataset":
