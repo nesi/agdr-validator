@@ -1,12 +1,10 @@
 '''
-@Author: Eirian Perkins
-
 This file provides the main entry point for the package. 
 It provides a command line interface for the package using the argparse module.
 '''
 
 import argparse
-import datetime
+import datetime as dt
 import logging
 import os
 import shutil
@@ -79,12 +77,15 @@ def main():
 
     #from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
     #from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_10 import loadDictionary
-    from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_24 import \
+    #from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_24 import \
+    from agdrvalidator.data.dictionaries.agdrdictionary_2025_01_24 import \
         loadDictionary
     from agdrvalidator.parser.excel.agdrspreadsheet_2024_08_28 import \
         Agdr as AgdrSpreadsheetParser
-    from agdrvalidator.schema.agdrschema_2024_09_10 import AGDR as AGDRSchema
-    from agdrvalidator.schema.validator_2024_09_10 import \
+    #from agdrvalidator.schema.agdrschema_2024_09_10 import AGDR as AGDRSchema
+    from agdrvalidator.schema.agdrschema_2025_01_24 import AGDR as AGDRSchema
+    #from agdrvalidator.schema.validator_2024_09_10 import \
+    from agdrvalidator.schema.validator_2025_01_24 import \
         AGDRValidator as AGDRValidator
 
 
@@ -102,7 +103,7 @@ def main():
 
     report_file = None 
     if not write_to_stdout:
-        report_file = f"{project}_Validation_Report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+        report_file = f"{project}_Validation_Report_{dt.datetime.now().strftime('%Y-%m-%d')}.txt"
     cleanUpFile(report_file)
     validator = AGDRValidator(schema, agdrschema, report_file)
     validator.validate(validation_verbosity)
@@ -111,7 +112,7 @@ def main():
         print("\nGENERATING TSV FILES...")
         if not project:
             project = "AGDR99999"
-        directory = f"{project}_TSV_Output_{datetime.datetime.now().strftime('%Y-%m-%d')}"
+        directory = f"{project}_TSV_Output_{dt.datetime.now().strftime('%Y-%m-%d')}"
         cleanUpDir(directory)
         print(f"\tDIRECTORY:\t{directory}")
         agdrschema.toTSV(directory)

@@ -1,16 +1,14 @@
 '''
-@Author: Eirian Perkins
-
 This file is a subclass of TSVTransformer, and is intended to convert
-metadata from a spreadsheet aligned with the 2022-09-23 version of the
-AGDR schema into a collection of TSV files, which can be then used 
+metadata from a spreadsheet aligned with the version of the
+AGDR schema as specified in the file name into a collection of TSV files, which can be then used 
 for metadata ingestion into a Gen3 data commons.
 '''
-from agdrvalidator.transformer.tsv import TSVTransformer
-from agdrvalidator.utils import logger
-
 import datetime
 import os
+
+from agdrvalidator.transformer.tsv import TSVTransformer
+from agdrvalidator.utils import logger
 
 logger = logger.setUp(__name__)
 
