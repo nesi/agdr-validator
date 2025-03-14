@@ -2,6 +2,7 @@
 this file contains data container classes used to represent 
 metadata from excel workbook input.
 '''
+import sys
 
 from alive_progress import alive_bar
 
@@ -18,7 +19,23 @@ from agdrvalidator.utils.rich_tabular import (CellLocation, SpreadsheetNode,
                                               SpreadsheetRow)
 
 logger = logger.setUp(__name__)
+class AllDatasets:
+    def __init__(self):
+        self.datasets = []  # Define an empty list
 
+    def add_dataset(self, name, value):
+        dataset_entry = {"name": name, "value": value}
+        self.datasets.append(dataset_entry)  # Add the dictionary to the list
+
+    def get_value_by_name(self, dataset_name_in_experiment):
+        for dataset in self.datasets:
+            if dataset["name"].strip().lower() == dataset_name_in_experiment.strip().lower():
+                return dataset["value"]
+        print(f"In Experiments, there is a dataset name {dataset_name_in_experiment} that we cannot match to any dataset names in the project tab")
+        sys.exit(1)
+        return None  # Return None if no match is found
+    
+all_datasets = AllDatasets()
 class AGDRRow(SpreadsheetRow):
     '''
     This class represents an entire row of data from a 
@@ -446,7 +463,10 @@ class AGDR(SpreadsheetNode):
                 property = row.get("dataset_id")
                 self._unique_id = property.data
                 agdr_submitter_id = AGDRProperty(property, g3prop)
-
+                
+                #adding the dataset in the list - used by the experiment to change the name into the id
+                all_datasets.add_dataset(agdr_name.get_value(), agdr_submitter_id.get_value())
+                
                 # properties ordered by order displayed in the portal
                 # (not a requirement, a preference)
                 row_data = [
@@ -609,13 +629,14 @@ class AGDR(SpreadsheetNode):
 
                 # dataset_name
                 g3prop = self.gen3node.getProperty("dataset") # it is None, because it is not extracted from the dictionary by the parser
-                dataset = row.get("dataset_name")
-                agdr_dataset = AGDRProperty(dataset, g3prop)
+                property = row.get("dataset_name")
+                agdr_dataset_name = AGDRProperty(property, g3prop)
+                agdr_dataset = self._generate_property("dataset.submitter_id", all_datasets.get_value_by_name(agdr_dataset_name.get_value()), g3prop)
                 agdr_dataset.gen3_name = "dataset.submitter_id" # override name
 
                 # TODO: implement function to generate submitter_id for all nodes
                 g3prop = self.gen3node.getProperty("submitter_id")
-                submitter_id = dataset.data + "_" + "CONTACT_" + str(count)
+                submitter_id = agdr_dataset_name.data + "_" + "CONTACT_" + str(count)
                 property = self._generate_property("submitter_id", submitter_id, g3prop)
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 self._unique_id = property.data
@@ -660,7 +681,8 @@ class AGDR(SpreadsheetNode):
                 # create a dataset.submitter_id property
                 g3prop = self.gen3node.getProperty("dataset") 
                 property = row.get("dataset_name")
-                agdr_dataset = AGDRProperty(property, g3prop)
+                agdr_dataset_name = AGDRProperty(property, g3prop)
+                agdr_dataset = self._generate_property("dataset.submitter_id", all_datasets.get_value_by_name(agdr_dataset_name.get_value()), g3prop)
                 agdr_dataset.gen3_name = "dataset.submitter_id" # override name
 
                 # data_description
