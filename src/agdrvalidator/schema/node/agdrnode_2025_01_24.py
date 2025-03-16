@@ -500,8 +500,7 @@ class AGDR(SpreadsheetNode):
             
             agdr_projects = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
             agdr_project_code = self._generate_property("projects.code", f"{self.project_name}", self.gen3node.getProperty("project_id"))
-            agdr_project_code.gen3_name = "projects.code" # override name
-            
+            agdr_project_code.gen3_name = "projects.code" # override name           
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
             for row in data:
                 # properties ordered by order displayed in spreadsheet
@@ -610,7 +609,6 @@ class AGDR(SpreadsheetNode):
                 # (ok, Contributors optional)
                 return []
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
-
             agdr_project_id = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
             count = 0
             for row in data:
@@ -705,11 +703,13 @@ class AGDR(SpreadsheetNode):
             sheet_name = None
             try:
                 sheet_name = self._extract_spreadsheet_name(data)
+                print(f"sheet_name  {sheet_name}.")
             except Exception:
                 # no data for this entry
                 # (ok, it's either genome or metagenome)
                 return []
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+
             for row in data:
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
@@ -1001,7 +1001,9 @@ class AGDR(SpreadsheetNode):
                 # no data for this entry
                 # (ok, it's either genome or metagenome)
                 return []
+            
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+            
             for row in data:
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
@@ -1176,6 +1178,7 @@ class AGDR(SpreadsheetNode):
             nodes = []
             sheet_name = self._extract_spreadsheet_name(data)
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+            
             for row in data:
                 # sample_id
                 g3prop = self.gen3node.getProperty("submitter_id")

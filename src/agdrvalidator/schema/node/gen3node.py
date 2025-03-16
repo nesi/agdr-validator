@@ -1,18 +1,15 @@
 '''
-@Author: Eirian Perkins
-
 This file contains the Gen3 node class, which is used as a component 
 of the Gen3 schema, which is used to represent an arbitrary Gen3 metadata 
 structure. A Node is a component of a schema, which are linked together 
 in a directed acyclic graph. A node is composed of properties.
 '''
-from agdrvalidator.utils import logger 
-from agdrvalidator.schema.node.base import Node as Node
+from enum import Enum
+
 import agdrvalidator.schema.node.property.gen3property as Property
 from agdrvalidator import AgdrFormatException
-
-
-from enum import Enum
+from agdrvalidator.schema.node.base import Node as Node
+from agdrvalidator.utils import logger
 
 logger = logger.setUp(__name__)
 
@@ -174,17 +171,6 @@ class Gen3(Node):
         category = ref[0]
         key = ref[1].split("/")[-1]
         if category in lookup:
-            return lookup[category][key]
-        else:
-            raise AgdrFormatException(f"could not find definition for {ref}")
-
-
-    def _extract_definition_from_ref(self, lookup, ref):
-        # for now: assume no recursion needed
-        ref = ref.split("#")
-        category = ref[0]
-        key = ref[1].split("/")[-1]
-        if category in lookup:
             return {key: lookup[category][key]}
         else:
             raise AgdrFormatException(f"could not find definition for {ref}")
@@ -205,11 +191,13 @@ class Gen3(Node):
         ref = ref.split("#")
         category = ref[0]
         key = ref[1].split("/")[-1]
+        #print(f'key {key} then category {category} for ref {ref}')
         if category:
             self._last_lookup_table = category 
         else:
             logger.debug(f"_____________________________recursive definition: {key}_____________________________")
             category = self._last_lookup_table
+            
         if category in lookup:
             for property in lookup[category][key]:
                 logger.debug(property)
@@ -293,20 +281,34 @@ class Gen3(Node):
             # still need to extract terms, but it can be skipped for the moment
         logger.debug("[__extracted properties from refs:__]")
         # there are 2 lists of properties here for debugging purposes only
+        # List to collect new properties
+
+        additional_properties = []
+        #type was missing from few tsv because sample and other have a ref in a ref e.g. organism_properties which is refering ubiquitous_properties which need to be processed too
+        for property in nested_properties:
+            if property == "$ref":
+                # Do something
+                new_nested_properties = self._extract_properties_from_ref(nested_properties[property], terms, definitions, settings, isTopLevel=True)
+                for new_property in new_nested_properties:
+                    additional_properties.append(new_property)
+
+        
+        if additional_properties:
+            nested_properties.update({prop: new_nested_properties[prop] for prop in additional_properties})
+        
         for property in nested_properties:
             #nest_prop = nested_properties
-            prop = None
-
-            # hack for collection_date
+            prop = None  
             if len(nested_properties[property]) == 1:
                 logger.debug("........only one property: " + property)
                 prop = list(nested_properties[property].keys())[0]
-
+            
             logger.debug(f"\t:len of nest_prop: {len(nested_properties[property])}")
             logger.debug(f"\t:property___: {property}\t{nested_properties[property]}")
             if prop:
                 logger.debug(f"\t:prop___: {prop}\t{nested_properties[property][prop]}")
             logger.debug("\t\t:is required?__: " + str(property in required))
+                  
             if "type" not in nested_properties[property] and "enum" not in nested_properties[property] and not prop: 
                 #and prop and "oneOf" not in nested_properties[property][prop]:
                 logger.debug(f"\t\t\t:skipping property: {property}")
