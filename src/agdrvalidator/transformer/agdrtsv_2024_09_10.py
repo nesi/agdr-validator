@@ -67,7 +67,7 @@ class AGDRTSVTransformer(TSVTransformer):
             #if column == "type":
             #    continue
             property = node.getProperty(column)
-            if property and property.get_value():
+            if property and property.get_value() not in empty_values:
                 row_data.append(property.get_value())
             else:
                 row_data.append("")

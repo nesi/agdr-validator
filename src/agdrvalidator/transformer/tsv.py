@@ -1,6 +1,4 @@
 '''
-@Author: Eirian Perkins
-
 This file provides the base class for all TSV transformers, which 
 convert a specific metadata structure into a collection of TSV files.
 When a new data dictionary structure is created, a new TSV transformer
@@ -11,6 +9,7 @@ to the maintainability of the codebase and the ability to implement
 backwards compatibility with older metadata structures.
 '''
 import abc
+
 
 class TSVTransformer(abc.ABC):
     def __init__(self, node):

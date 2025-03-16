@@ -979,7 +979,7 @@ class AGDR(SpreadsheetNode):
                     agdr_phenotype,
                     agdr_secondary_identifier,
                     agdr_sex,
-                    #agdr_source_material_id, # not in template, should it be?
+                    #agdr_source_material_id, # not in template, combined with the secondary_identifier field
                     agdr_specimen_collect_device,
                     agdr_specimen_common_name,
                     agdr_specimen_maori_name,
@@ -1082,7 +1082,6 @@ class AGDR(SpreadsheetNode):
                 agdr_coordinate_uncertainty_in_meters = AGDRProperty(property, g3prop)
 
                 # samp_collect_device
-                # TODO: should be named specimen_collect_device?
                 g3prop = self.gen3node.getProperty("specimen_collect_device")
                 property = row.get("samp_collect_device")
                 agdr_specimen_collect_device = AGDRProperty(property, g3prop)
@@ -1165,7 +1164,7 @@ class AGDR(SpreadsheetNode):
                     agdr_minimum_depth_in_meters,
                     agdr_minimum_elevation_in_meters,
                     agdr_secondary_identifier,
-                    #agdr_source_material_id,      # not in template, should it be?
+                    #agdr_source_material_id,      # not in template, combined with the secondary_identifier field
                     agdr_specimen_collect_device,
                     agdr_store_cond,
                     agdr_type
@@ -1304,7 +1303,7 @@ class AGDR(SpreadsheetNode):
 
                 row_data = [
                     agdr_submitter_id,
-                    #agdr_biomaterial_provider, # not in template
+                    #agdr_biomaterial_provider, # not in template - correct, in the experiments_genomic tab
                     agdr_collected_by,
                     agdr_collection_date,
                     agdr_coordinate_uncertainty_in_meters,
@@ -1313,7 +1312,7 @@ class AGDR(SpreadsheetNode):
                     #agdr_genomes, # cannot be determined here
                     agdr_geo_loc_name,
                     agdr_habitat,
-                    #agdr_host, # not in template
+                    #agdr_host, # not in template correct, only in the experiments_metagenomic tab
                     agdr_latitude_decimal_degrees,
                     agdr_longitude_decimal_degrees,
                     #agdr_metagenomes, # cannot be determined here
@@ -1323,8 +1322,8 @@ class AGDR(SpreadsheetNode):
                     agdr_sample_size_value,
                     agdr_sample_title,
                     agdr_secondary_identifier,
-                    #agdr_source_material_id, # not in template
-                    #agdr_specimen_collect_device, # not in template
+                    #agdr_source_material_id, # not in template combined with the secondary_identifier field
+                    #agdr_specimen_collect_device, # not in template, correct, it is unused
                     agdr_specimen_voucher,
                     agdr_store_cond,
                     agdr_tissue,
