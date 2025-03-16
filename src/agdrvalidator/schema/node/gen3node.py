@@ -291,7 +291,6 @@ class Gen3(Node):
                 new_nested_properties = self._extract_properties_from_ref(nested_properties[property], terms, definitions, settings, isTopLevel=True)
                 for new_property in new_nested_properties:
                     additional_properties.append(new_property)
-
         
         if additional_properties:
             nested_properties.update({prop: new_nested_properties[prop] for prop in additional_properties})

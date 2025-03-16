@@ -1728,6 +1728,14 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("data_category")
                 property = row.get("data_category")
                 agdr_data_category = AGDRProperty(property, g3prop)
+                if agdr_data_category.get_value().lower() == "raw read file":
+                    agdr_data_category = self._generate_property("data_category", "Raw Read File", g3prop)
+                elif agdr_data_category.get_value().lower() == "processed file":
+                    agdr_data_category = self._generate_property("data_category", "Processed File", g3prop)
+                elif agdr_data_category.get_value().lower() == "supplementary file":
+                    agdr_data_category = self._generate_property("data_category", "Supplementary File", g3prop)
+                elif agdr_data_category.get_value().lower() == "aligned reads file":
+                    agdr_data_category = self._generate_property("data_category", "Aligned Reads File", g3prop)
 
                 # genomics_assay
                 # sample_id -- generate parent genomics_assay.submitter_id
@@ -1782,7 +1790,8 @@ class AGDR(SpreadsheetNode):
         def populate_processed_file():
             return populate_supplementary_file(data_category="Processed File")
 
-
+        def populate_aligned_read_index():
+            return populate_supplementary_file(data_category="Aligned Reads File")
 
 
         if self.name.lower() ==               "project": return populate_project_node()
@@ -1800,6 +1809,8 @@ class AGDR(SpreadsheetNode):
         if self.name.lower() ==    "supplementary_file": return populate_supplementary_file()
         if self.name.lower() ==                   "raw": return populate_raw()
         if self.name.lower() ==        "processed_file": return populate_processed_file()
+        #aligned read file missing?
+        if self.name.lower() ==        "aligned_read_index": return populate_aligned_read_index()
         # above are good
 
         # create an AGDRRow object for each row of data
