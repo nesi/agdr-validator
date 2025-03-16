@@ -404,12 +404,11 @@ class AGDR(SpreadsheetNode):
                 property = row.get("dataset_name")
                 agdr_name = AGDRProperty(property, g3prop)
 
-                # date collected
-                # TODO: (Ask Claire, not in dictionary)
-                # decision: get rid of it
-                #g3prop = None #self.gen3node.getProperty("date_collected")
-                #property = row.get("date_collected")
-                #agdr_date_collected = AGDRProperty(property, g3prop)
+                # date_collected is collection_date in the dictionary
+                g3prop = self.gen3node.getProperty("collection_date") #Nat: there is a bug and in gen3parser or gen3node, the property for collectiondate are not found, same for sequencing date and most of the dates!! Here I do not mind as we want to be more flexible
+                property = row.get("date_collected")
+                agdr_date_collected = AGDRProperty(property, g3prop)
+                agdr_date_collected.gen3_name = "collection_date"
 
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
@@ -473,7 +472,7 @@ class AGDR(SpreadsheetNode):
                     agdr_submitter_id,
                     agdr_projects,
                     agdr_project_code,
-                    #agdr_date_collected,
+                    agdr_date_collected,
                     agdr_doi,
                     agdr_application_form,
                     agdr_contact,

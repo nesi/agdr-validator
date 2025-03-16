@@ -6,15 +6,15 @@ templates are currently versioned. This file is for the 2024-08-28 version
 of the AGDR metadata template, which corresponds to the 2024-09-10 version 
 of the AGDR metadata dictionary.
 '''
-from agdrvalidator.utils import logger
-from agdrvalidator.utils.array import *
+import openpyxl
+import pandas as pd
+from alive_progress import alive_bar
+
 from agdrvalidator import AgdrFormatException, BadMetadataSpreadhsheetException
 from agdrvalidator.parser import *
-from agdrvalidator.utils.rich_tabular import * 
-import pandas as pd
-import openpyxl
-
-from alive_progress import alive_bar
+from agdrvalidator.utils import logger
+from agdrvalidator.utils.array import *
+from agdrvalidator.utils.rich_tabular import *
 
 logger = logger.setUp(__name__)
 
@@ -254,17 +254,19 @@ class Agdr(Parser):
             data = self._seek_data(tab_name, 0)
             sn = SpreadsheetNode("file", data)
             return sn
-        def parse_instrument_node():
-            '''
-            this has been deprecated because file and instrument 
-            metadata have been combined into a single table in the 
-            AGDR metadata spreadsheet template
-            '''
-            startrow = self._seek(tab_name, "Instrument and sequencing metadata")
-            logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
-            sn = SpreadsheetNode("instruments", data)
-            return sn
+        
+        # def parse_instrument_node():
+        #     '''
+        #     this has been deprecated because file and instrument 
+        #     metadata have been combined into a single table in the 
+        #     AGDR metadata spreadsheet template
+        #     '''
+        #     startrow = self._seek(tab_name, "Instrument and sequencing metadata")
+        #     logger.debug(f"startrow: {startrow}")
+        #     data = self._seek_data(tab_name, startrow)
+        #     sn = SpreadsheetNode("instruments", data)
+        #     return sn
+        
         nodes["file"]       = parse_file_node()
         #nodes["instrument"] = parse_instrument_node()
         return nodes
