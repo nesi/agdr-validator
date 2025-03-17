@@ -28,7 +28,7 @@ def getParentUniqueIdProperties(node_name):
     if node_name == "contributor":
         props = ["dataset.submitter_id"] # TBD: add external_dataset.submitter_id
     if node_name == "experiment":
-        props = ["project_id"]
+        props = ["dataset.submitter_id"]
     if node_name == "metagenome":
         props = ["experiment.submitter_id"]
     if node_name == "genome":
@@ -241,7 +241,7 @@ class AGDRValidator(Schema):
                         #print(f"node metadata: {node.metadata.getProperty(lookup_prop)}")
                         #print(f"node metadata value: {node.metadata.getProperty(lookup_prop).get_value()}")
                         #print(f"uniqueId: {pp.metadata.uniqueId().lower()} == {node.metadata.getProperty(lookup_prop).get_value().lower()}")
-                        if pp.metadata.uniqueId().lower() == str(node.metadata.getProperty(lookup_prop).get_value()).lower():
+                        if pp.metadata.uniqueId().lower().strip() == str(node.metadata.getProperty(lookup_prop).get_value()).lower().strip():
                             node.addParent(pp)
                             pp.addChild(node)
                             node_id = node.metadata.getProperty('submitter_id').get_value() 
@@ -300,113 +300,114 @@ class AGDRValidator(Schema):
 
 #######
 
+#not called anywhere for the moment ???
+    # def _addParentToNodeInGraphData(self, node, parent):
+    #     '''
+    #     This function does most of the work to validate a schema. In order 
+    #     to connect a node to its parent, it must first find the parent
+    #     in the metadata graph. It does this by looking for a match between
+    #     the uniqueId of the parent and the uniqueId of the node. If a match
+    #     is found, the node is connected to the parent. If no match is found,
+    #     validation errors are generated and collected, and the 
+    #     node connection algorithm continues until all instances of nodes
+    #     provided by the spreadsheet input are visited.
+    #     '''
+    #     # node is a Dataset type
+    #     # parent is a Gen3Node type
+    #     logger.debug("\n\n...")
+    #     logger.debug(f"adding parent __{parent.name}__ to node ___{node.name}___")
+    #     key = parent.name
+    #     if key not in self._metadata_graph:
+    #         # this is OK, example if node is sample, and it could have one of 
+    #         # several parents (metagenome, organism, population genomics)
+    #         #
+    #         # When this function is called for a particular node, it is known
+    #         # that all of its parents have been visited, and therefore
+    #         # will have been added to the metadata graph. If a parent is not
+    #         # found, it is either because the parent is not required, or 
+    #         # there is invalid metadata provided as input to the program.
+    #         #
+    #         # If there is an error, it will be detected when an orphaned node
+    #         # tries to find its parents in the graph.
+    #         logger.info(f"parent {key} not found in metadata graph for child {node.name}")
+    #         return
+    #     potential_parents = self._metadata_graph[key]
+    #     logger.debug(f"number of potential parents: {len(potential_parents)}")
+    #     logger.debug("------------------------------------------------------")
+    #     logger.debug(f"current properties of {node.name}:")
+    #     logger.debug("------------------------------------------------------")
+    #     logger.debug("\t---------------gen3-----------------")
+    #     for prop in node.metadata.getGen3Node()._properties:
+    #         logger.debug(f"\t{prop._name}: \t {node.metadata.getProperty(prop._name)}")
+    #     logger.debug("\t---------------excel----------------")
+    #     for prop in node.metadata._properties:
+    #         logger.debug(f"\t{prop._name}: \t {node.metadata.getProperty(prop._name)}")
+    #     logger.debug("------------------------------------------------------\n\n")
+    #     lookup_props = getParentUniqueIdProperties(node.name)
+    #     matchFound = False
+    #     pp = None # define here so it's in scope later for disconnected nodes
+    #     for pp in potential_parents:
+    #         logger.debug(f"parent: {node.name} {node.metadata.getProperty(lookup_props[0])}")
+    #         logger.debug(f"potential parent: {pp.name} {pp.metadata.getProperty('submitter_id')}")
+    #         logger.debug(f"+_+_+_+_____lookup prop: {lookup_props[0]}")
+    #         logger.debug(f"all properties of {key}:")
+    #         # from the data dictionary input
+    #         logger.debug("\t---------------gen3-----------------")
+    #         for prop in pp.metadata.getGen3Node()._properties:
+    #             logger.debug(f"\t{prop._name}")
+    #             logger.debug(f"\t{pp.metadata.getProperty(prop._name)}\n\n")
+    #         # from the spreadsheet input
+    #         #for prop in pp.metadata._properties:
+    #         #    print(f"\t{prop._name}")
+    #         #    print(f"\t{pp.metadata.getProperty(prop._name)}")
+    #         #    print()
+    #         for lookup_prop in lookup_props:
+    #             if pp.metadata.uniqueId().lower().strip() == node.metadata.getProperty(lookup_prop).get_value().lower().strip():
+    #                 logger.debug(f"______setting parent...______")
+    #                 node.addParent(pp)
+    #                 pp.addChild(node)
+    #                 matchFound = True
+    #                 break
+    #             else:
+    #                 logger.debug(f"no match: {pp.metadata.uniqueId()} != {node.metadata.getProperty(lookup_prop).get_value()}")
+    #     else:
+    #         if not matchFound:
+    #             # TODO: I can start adding validation error objects from here
+    #             # rather than iterating through again, I am trying to link up the graph 
+    #             # and it fails here, so no need to iterate through again
+    #             #
+    #             # actually, I want to distinguish between optional and required links
+    #             # I can do that here though
+    #             #
+    #             # note also that gen3 doesn't really model child links
+    #             # so, just need to look at parent links, and bob's your uncle
 
-    def _addParentToNodeInGraphData(self, node, parent):
-        '''
-        This function does most of the work to validate a schema. In order 
-        to connect a node to its parent, it must first find the parent
-        in the metadata graph. It does this by looking for a match between
-        the uniqueId of the parent and the uniqueId of the node. If a match
-        is found, the node is connected to the parent. If no match is found,
-        validation errors are generated and collected, and the 
-        node connection algorithm continues until all instances of nodes
-        provided by the spreadsheet input are visited.
-        '''
-        # node is a Dataset type
-        # parent is a Gen3Node type
-        logger.debug("\n\n...")
-        logger.debug(f"adding parent __{parent.name}__ to node ___{node.name}___")
-        key = parent.name
-        if key not in self._metadata_graph:
-            # this is OK, example if node is sample, and it could have one of 
-            # several parents (metagenome, organism, population genomics)
-            #
-            # When this function is called for a particular node, it is known
-            # that all of its parents have been visited, and therefore
-            # will have been added to the metadata graph. If a parent is not
-            # found, it is either because the parent is not required, or 
-            # there is invalid metadata provided as input to the program.
-            #
-            # If there is an error, it will be detected when an orphaned node
-            # tries to find its parents in the graph.
-            logger.info(f"parent {key} not found in metadata graph for child {node.name}")
-            return
-        potential_parents = self._metadata_graph[key]
-        logger.debug(f"number of potential parents: {len(potential_parents)}")
-        logger.debug("------------------------------------------------------")
-        logger.debug(f"current properties of {node.name}:")
-        logger.debug("------------------------------------------------------")
-        logger.debug("\t---------------gen3-----------------")
-        for prop in node.metadata.getGen3Node()._properties:
-            logger.debug(f"\t{prop._name}: \t {node.metadata.getProperty(prop._name)}")
-        logger.debug("\t---------------excel----------------")
-        for prop in node.metadata._properties:
-            logger.debug(f"\t{prop._name}: \t {node.metadata.getProperty(prop._name)}")
-        logger.debug("------------------------------------------------------\n\n")
-        lookup_props = getParentUniqueIdProperties(node.name)
-        matchFound = False
-        pp = None # define here so it's in scope later for disconnected nodes
-        for pp in potential_parents:
-            logger.debug(f"parent: {node.name} {node.metadata.getProperty(lookup_props[0])}")
-            logger.debug(f"potential parent: {pp.name} {pp.metadata.getProperty('submitter_id')}")
-            logger.debug(f"+_+_+_+_____lookup prop: '{lookup_props[0]}'")
-            logger.debug(f"all properties of {key}:")
-            # from the data dictionary input
-            logger.debug("\t---------------gen3-----------------")
-            for prop in pp.metadata.getGen3Node()._properties:
-                logger.debug(f"\t{prop._name}")
-                logger.debug(f"\t{pp.metadata.getProperty(prop._name)}\n\n")
-            # from the spreadsheet input
-            #for prop in pp.metadata._properties:
-            #    print(f"\t{prop._name}")
-            #    print(f"\t{pp.metadata.getProperty(prop._name)}")
-            #    print()
-            for lookup_prop in lookup_props:
-                if pp.metadata.uniqueId().lower() == node.metadata.getProperty(lookup_prop).get_value().lower():
-                    logger.debug(f"______setting parent...______")
-                    node.addParent(pp)
-                    pp.addChild(node)
-                    matchFound = True
-                    break
-                else:
-                    logger.debug(f"no match: {pp.metadata.uniqueId()} != {node.metadata.getProperty(lookup_prop).get_value()}")
-        else:
-            if not matchFound:
-                # TODO: I can start adding validation error objects from here
-                # rather than iterating through again, I am trying to link up the graph 
-                # and it fails here, so no need to iterate through again
-                #
-                # actually, I want to distinguish between optional and required links
-                # I can do that here though
-                #
-                # note also that gen3 doesn't really model child links
-                # so, just need to look at parent links, and bob's your uncle
+    #             validationError = True
+    #             for plink in node.metadata.getGen3Node().getParentLinks():
+    #                 if pp and str(plink.node_id).lower().strip() == str(pp.name).lower().strip():
+    #                     node_id = node.metadata.getProperty('submitter_id').get_value()
+    #                     entry = None
+    #                     if plink.requiredtype == RequiredType.OPTIONAL:
+    #                         msg = f"INFO:\tno optional link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
+    #                         logger.debug(msg)
+    #                         entry = ValidationEntry(ValidationError.INFO, msg)
 
-                validationError = True
-                for plink in node.metadata.getGen3Node().getParentLinks():
-                    if pp and str(plink.node_id).lower() == str(pp.name).lower():
-                        node_id = node.metadata.getProperty('submitter_id').get_value()
-                        entry = None
-                        if plink.requiredtype == RequiredType.OPTIONAL:
-                            msg = f"INFO:\tno optional link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
-                            logger.debug(msg)
-                            entry = ValidationEntry(ValidationError.INFO, msg)
+    #                         validationError = False
+    #                     else:
+                            
+    #                         msg = f"ERROR:\tno REQUIRED link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
+    #                         logger.error(msg)
+    #                         entry = ValidationEntry(ValidationError.ERROR, msg)
 
-                            validationError = False
-                        else:
-                            msg = f"ERROR:\tno REQUIRED link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
-                            logger.error(msg)
-                            entry = ValidationEntry(ValidationError.ERROR, msg)
+    #                     # self._node_validation_errors:
+    #                     # node type -> submitter_id -> list of ValidationEntry objects
+    #                     if node.name not in self._node_validation_errors:
+    #                         self._node_validation_errors[node.name] = {}
+    #                     if node_id not in self._node_validation_errors[node.name]:
+    #                         self._node_validation_errors[node.name][node_id] = []
+    #                     self._node_validation_errors[node.name][node_id].append(entry)
 
-                        # self._node_validation_errors:
-                        # node type -> submitter_id -> list of ValidationEntry objects
-                        if node.name not in self._node_validation_errors:
-                            self._node_validation_errors[node.name] = {}
-                        if node_id not in self._node_validation_errors[node.name]:
-                            self._node_validation_errors[node.name][node_id] = []
-                        self._node_validation_errors[node.name][node_id].append(entry)
-
-                        break
+    #                     break
 
 
     def findNode(self, node_name, submitter_id):
