@@ -511,9 +511,8 @@ class AGDR(SpreadsheetNode):
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 self._unique_id = property.data
 
-                # date collected
-                # TODO: (Ask Claire, not in dictionary)
-                # decision: get rid of it
+                # date collected 764
+                # Not yet in the dictionary - future work AGDR-
                 g3prop = None #self.gen3node.getProperty("date_collected")
                 property = row.get("date_collected")
                 agdr_date_collected = AGDRProperty(property, g3prop)
@@ -1530,10 +1529,11 @@ class AGDR(SpreadsheetNode):
                 property = row.get("sequencing_center")
                 agdr_sequencing_center = AGDRProperty(property, g3prop)
 
-                # sequencing_date
+                # sequencing_date - Note the validator is not able yet to get the props of the sequencing date then I need to add the name for it
                 g3prop = self.gen3node.getProperty("sequencing_date")
                 property = row.get("sequencing_date")
                 agdr_sequencing_date = AGDRProperty(property, g3prop)
+                agdr_sequencing_date.gen3_name = "sequencing_date"
 
                 # size_selection_range
                 g3prop = self.gen3node.getProperty("size_selection_range")
@@ -1550,7 +1550,7 @@ class AGDR(SpreadsheetNode):
                 property = row.get("spike_ins_fasta")
                 agdr_spike_ins_fasta = AGDRProperty(property, g3prop)
 
-                # target_capture_kit
+                # target_capture_kit this does not exist in the spreadsheet at this stage but it is normal
                 g3prop = self.gen3node.getProperty("target_capture_kit")
                 property = row.get("target_capture_kit")
                 agdr_target_capture_kit = AGDRProperty(property, g3prop)
@@ -1645,7 +1645,7 @@ class AGDR(SpreadsheetNode):
                     agdr_size_selection_range,
                     agdr_spike_ins_concentration,
                     agdr_spike_ins_fasta,
-                    agdr_target_capture_kit,
+                    agdr_target_capture_kit, # this is not in the spreadsheet
                     agdr_target_capture_kit_catalog_number,
                     agdr_target_capture_kit_name,
                     agdr_target_capture_kit_target_region,
