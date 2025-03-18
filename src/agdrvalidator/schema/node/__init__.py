@@ -1,6 +1,4 @@
 '''
-@Author: Eirian Perkins
-
 This file determines what is available for import from the node package 
 when `from agdrvalidator.schema.node import *` is called. 
 '''

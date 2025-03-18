@@ -1,9 +1,7 @@
 '''
-@Author: Eirian Perkins
-
 A schema (collection of nodes) that holds the data read in from an 
 excel spreadsheet. It is compatible with the AGDR dictionary 
-version 2024-09-10.
+version 2025-01-24.
 
 An AGDR schema object defined here "has-a" Gen3 schema object, but 
 it would be better to keep those separate and have a Validator 
@@ -13,7 +11,7 @@ This improved implementation should be done for the new AGDR dictionary.
 '''
 
 #from agdrvalidator.transformer.agdrtsv_2024_03_25 import AGDRTSVTransformer
-import datetime
+import datetime as dt
 from typing import Dict
 
 from alive_progress import alive_bar
@@ -21,12 +19,12 @@ from alive_progress import alive_bar
 import agdrvalidator.utils as utils
 from agdrvalidator import *  # import AGDR exception types
 from agdrvalidator.schema.base import *
-from agdrvalidator.schema.node.agdrnode_2024_09_10 import AGDR as AGDRNode
-from agdrvalidator.schema.node.property.agdrproperty_2024_09_10 import \
+from agdrvalidator.schema.node.agdrnode import AGDR as AGDRNode
+from agdrvalidator.schema.node.property.agdrproperty import \
     AGDR as AGDRProperty
 from agdrvalidator.schema.node.property.gen3property import \
     Gen3 as Gen3Property
-from agdrvalidator.transformer.agdrtsv_2024_09_10 import AGDRTSVTransformer
+from agdrvalidator.transformer.agdrtsv import AGDRTSVTransformer
 from agdrvalidator.utils import logger
 from agdrvalidator.utils.helpers import *
 #from agdrvalidator.utils.tabular import * # Table()
@@ -57,7 +55,7 @@ class AGDR(Schema):
 
         self.report_output = report
         if not report:
-            self.report_output = f"{self.project_code}_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+            self.report_output = f"{self.project_code}_validation_report_{dt.datetime.now().strftime('%Y-%m-%d')}.txt"
 
 
         self.program_name = program

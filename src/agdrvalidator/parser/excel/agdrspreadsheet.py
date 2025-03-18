@@ -1,16 +1,16 @@
 '''
-@Author: Eirian Perkins
-
 The purpose of this file is to parse AGDR spreadsheets. The spreadsheet 
 templates are currently versioned. This file is for the 2024-08-28 version 
 of the AGDR metadata template, which corresponds to the 2024-09-10 version 
 of the AGDR metadata dictionary.
 '''
+import sys
+
 import openpyxl
 import pandas as pd
 from alive_progress import alive_bar
 
-from agdrvalidator import AgdrFormatException, BadMetadataSpreadhsheetException
+from agdrvalidator import AgdrFormatException, BadMetadataSpreadsheetException
 from agdrvalidator.parser import *
 from agdrvalidator.utils import logger
 from agdrvalidator.utils.array import *
@@ -43,15 +43,19 @@ class Agdr(Parser):
         # in the first column, find the row with the text
         # want to return row number, so the callee knows 
         # where to start parsing
-        sheet = pd.read_excel(self.pd_excel, sheet_name)
-        rows, _ = sheet.shape
-        for r in range(rows):
-            cell_text = str(sheet.loc[r].iat[0]).strip()
-            if cell_text.lower() == text.lower():
-                return r
-        else:
-            e = f"Could not find {text} in sheet"
-            raise BadMetadataSpreadhsheetException(e)
+        try:
+            sheet = pd.read_excel(self.pd_excel, sheet_name)
+            rows, _ = sheet.shape
+            for r in range(rows):
+                cell_text = str(sheet.loc[r].iat[0]).strip()
+                if cell_text.lower() == text.lower():
+                    return r
+            else:
+                e = f"Could not find {text} in sheet"
+                raise BadMetadataSpreadsheetException(e)
+        except Exception as e:
+            print(f"An error occurred while analysis the spreadsheet: {e} {sheet_name}. Please make sure that no sections are deleted from the original template even if unused and that they have not been renamed.")
+            sys.exit(1)
 
     def _seek_fields(self, sheet_name, startrow) -> SpreadsheetRow:
         '''
@@ -62,32 +66,36 @@ class Agdr(Parser):
 
         must return a SpreadsheetRow object
         '''
-        sheet = pd.read_excel(self.pd_excel, sheet_name)
-        rows, _ = sheet.shape
-        text = "Field"
-        row = None
-        for row in range(startrow, rows):
-            cell_text = str(sheet.loc[row].iat[0]).strip()
-            if cell_text.lower() == text.lower():
-                break
-        else:
-            e = f"Could not find {text} in sheet"
-            raise BadMetadataSpreadhsheetException(e)
+        try:
+            sheet = pd.read_excel(self.pd_excel, sheet_name)
+            rows, _ = sheet.shape
+            text = "Field"
+            row = None
+            for row in range(startrow, rows):
+                cell_text = str(sheet.loc[row].iat[0]).strip()
+                if cell_text.lower() == text.lower():
+                    break
+            else:
+                e = f"Could not find {text} in sheet"
+                raise BadMetadataSpreadsheetException(e)
 
-        # extract all entries in the current row
-        data = []
-        fields = list(sheet.loc[row].dropna().values)
-        for i in range(1, len(fields)):
-            fields[i] = fields[i].strip()
-            # cell position is row, i+1
-            cl = CellLocation(row+2, i+1)
-            cell = self.pyxl[sheet_name][str(cl)]
-            fill_color = cell.fill.start_color.index
-            required = self.required_color == fill_color
-            sp = SpreadsheetProperty(fields[i], None, cl, required)
-            data.append(sp)
-        #return fields[1:]
-        return SpreadsheetRow(data, sheet_name)
+            # extract all entries in the current row
+            data = []
+            fields = list(sheet.loc[row].dropna().values)
+            for i in range(1, len(fields)):
+                fields[i] = fields[i].strip()
+                # cell position is row, i+1
+                cl = CellLocation(row+2, i+1)
+                cell = self.pyxl[sheet_name][str(cl)]
+                fill_color = cell.fill.start_color.index
+                required = self.required_color == fill_color
+                sp = SpreadsheetProperty(fields[i], None, cl, required)
+                data.append(sp)
+            #return fields[1:]
+            return SpreadsheetRow(data, sheet_name)
+        except Exception as e:
+            print(f"An error occurred while analysis the spreadsheet: {e} {sheet_name}. Please make sure that no sections are deleted from the original template even if unused and that they have not been renamed.")
+            sys.exit(1)
 
 
     #def _seek_data(self, sheet_name, startrow, headers):
@@ -95,60 +103,63 @@ class Agdr(Parser):
         '''
         helper method for extracting data for a particular node
         '''
-        sheet = pd.read_excel(self.pd_excel, sheet_name)
-        headers = self._seek_fields(sheet_name, startrow)
-        self.headers = headers
+        try:
+            sheet = pd.read_excel(self.pd_excel, sheet_name)
+            headers = self._seek_fields(sheet_name, startrow)
+            self.headers = headers
 
-        rows, _ = sheet.shape
-        text = "Your input"
-        data = []
-        datastart = None
-        for r in range(startrow, rows):
-            cell_text = str(sheet.loc[r].iat[0]).strip()
-            if cell_text.lower() == text.lower():
-                datastart = r
-                break
-        else:
-            if datastart == None:
-                e = f"Could not find {text} in sheet"
-                raise BadMetadataSpreadhsheetException(e)
-
-        # now extract all rows of data until the row is empty
-        for r in range(datastart, rows):
-            
-            # don't do this, it removes all None values (unpopulated cells)
-            # what we want is to remove all None values at the end of the row
-            #row = list(sheet.loc[r].dropna().values)[1:]
-
-            #while row and pd.isna(row[-1]):
-            #    row.pop()
-            # the above is actually wrong, I want to stop popping rows
-            # when I hit the same length as the headers
-            row = list(sheet.loc[r].values)[1:]
-            row = row[:len(headers.data)]
-            logger.debug(f"row: {row}")
-
-            if pd.isna(row).all() or not row:
-                break
-
-            sp = None
-            spreadsheet_rows = []
-            for index, value in enumerate(row):
-                logger.debug(f"r: {r}, index: {index}")
-                cl = CellLocation(r+2, index+2)
-                pyxl_sheet = self.pyxl[sheet_name]
-                cell = pyxl_sheet[str(cl)]
-                logger.debug(cell)
-                logger.debug(cell.value)
-                name = headers[index].name
-                required = headers[index].required
-                sp = SpreadsheetProperty(name, value, cl, required)
-                spreadsheet_rows.append(sp)
+            rows, _ = sheet.shape
+            text = "Your input"
+            data = []
+            datastart = None
+            for r in range(startrow, rows):
+                cell_text = str(sheet.loc[r].iat[0]).strip()
+                if cell_text.lower() == text.lower():
+                    datastart = r
+                    break
             else:
-                sr = SpreadsheetRow(spreadsheet_rows, sheet_name)
-                data.append(sr)
+                if datastart == None:
+                    e = f"Could not find {text} in sheet"
+                    raise BadMetadataSpreadsheetException(e)
 
-        return data
+            # now extract all rows of data until the row is empty
+            for r in range(datastart, rows):
+                
+                # don't do this, it removes all None values (unpopulated cells)
+                # what we want is to remove all None values at the end of the row
+                #row = list(sheet.loc[r].dropna().values)[1:]
+
+                #while row and pd.isna(row[-1]):
+                #    row.pop()
+                # the above is actually wrong, I want to stop popping rows
+                # when I hit the same length as the headers
+                row = list(sheet.loc[r].values)[1:]
+                row = row[:len(headers.data)]
+                logger.debug(f"row: {row}")
+
+                if pd.isna(row).all() or not row:
+                    break
+
+                sp = None
+                spreadsheet_rows = []
+                for index, value in enumerate(row):
+                    logger.debug(f"r: {r}, index: {index}")
+                    cl = CellLocation(r+2, index+2)
+                    pyxl_sheet = self.pyxl[sheet_name]
+                    cell = pyxl_sheet[str(cl)]
+                    logger.debug(cell)
+                    logger.debug(cell.value)
+                    name = headers[index].name
+                    required = headers[index].required
+                    sp = SpreadsheetProperty(name, value, cl, required)
+                    spreadsheet_rows.append(sp)
+                else:
+                    sr = SpreadsheetRow(spreadsheet_rows, sheet_name)
+                    data.append(sr)
+            return data
+        except Exception as e:
+            print(f"An error occurred while analysis the spreadsheet: {e} {sheet_name}. Please make sure that no sections are deleted from the original template even if unused and that they have not been renamed.. Around row {startrow}.")
+            sys.exit(1)
 
 
     def _parse_project(self): 
@@ -317,7 +328,7 @@ class Agdr(Parser):
             #self.version = self._parse_nesi_internal_use()
             return {}
         else:
-            raise BadMetadataSpreadhsheetException("Tab not recognized")
+            raise BadMetadataSpreadsheetException("Tab not recognized")
         return {}
 
 

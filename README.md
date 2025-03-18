@@ -152,3 +152,5 @@ If you are using the validator and encounter an error or unexpected behaviour,
 it would be most helpful if you could re-run the command with the 
 `-l 3` option. This will generate a log file with the highest verbosity 
 level, which will help developers to diagnose the issue.
+
+Thank you to Eirian Perkins to have created the first version of the validator on which this validator is based on. 

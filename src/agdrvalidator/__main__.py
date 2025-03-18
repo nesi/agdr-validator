@@ -76,18 +76,11 @@ def main():
     validation_verbosity = args.validate
     write_to_stdout = args.stdout
 
-    #from agdrvalidator.parser.excel.agdrspreadsheet import Agdr as Agdr
-    #from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_10 import loadDictionary
-    #from agdrvalidator.data.dictionaries.agdrdictionary_2024_09_24 import \
-    from agdrvalidator.data.dictionaries.agdrdictionary_2025_01_24 import \
-        loadDictionary
-    from agdrvalidator.parser.excel.agdrspreadsheet_2024_08_28 import \
+    from agdrvalidator.data.dictionaries.agdrdictionary import loadDictionary
+    from agdrvalidator.parser.excel.agdrspreadsheet import \
         Agdr as AgdrSpreadsheetParser
-    #from agdrvalidator.schema.agdrschema_2024_09_10 import AGDR as AGDRSchema
-    from agdrvalidator.schema.agdrschema_2025_01_24 import AGDR as AGDRSchema
-    #from agdrvalidator.schema.validator_2024_09_10 import \
-    from agdrvalidator.schema.validator_2025_01_24 import \
-        AGDRValidator as AGDRValidator
+    from agdrvalidator.schema.agdrschema import AGDR as AGDRSchema
+    from agdrvalidator.schema.validator import AGDRValidator as AGDRValidator
 
 
     excelpath = args.spreadsheet

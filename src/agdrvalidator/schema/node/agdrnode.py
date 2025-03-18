@@ -2,13 +2,14 @@
 this file contains data container classes used to represent 
 metadata from excel workbook input.
 '''
+import sys
 
 from alive_progress import alive_bar
 
 from agdrvalidator import *  # import AGDR exception types
 from agdrvalidator.schema.node.gen3node import Gen3 as Gen3Node
 #from agdrvalidator.schema.node.property.gen3property import *
-from agdrvalidator.schema.node.property.agdrproperty_2024_09_10 import \
+from agdrvalidator.schema.node.property.agdrproperty import \
     AGDR as AGDRProperty
 from agdrvalidator.schema.node.property.gen3property import \
     Gen3 as Gen3Property
@@ -18,7 +19,26 @@ from agdrvalidator.utils.rich_tabular import (CellLocation, SpreadsheetNode,
                                               SpreadsheetRow)
 
 logger = logger.setUp(__name__)
+class AllDatasets:
+    def __init__(self):
+        self.datasets = []  # Define an empty list
 
+    def add_dataset(self, name, value):
+        dataset_entry = {"name": name, "value": value}
+        self.datasets.append(dataset_entry)  # Add the dictionary to the list
+
+    def get_value_by_name(self, dataset_name_in_experiment):
+        for dataset in self.datasets:
+            if dataset["name"].strip().lower() == dataset_name_in_experiment.strip().lower():
+                return dataset["value"]
+        else: 
+            print(f"In Experiments or Contributor, there is one or more dataset name {dataset_name_in_experiment} \n" 
+                f"that we cannot match to any dataset names in the project tab.\n "
+                f"Make sure that there is 1 row per entry. e.g if a contributor is connected to more than 1 dataset, please enter 2 rows, 1 for each dataset.\n ")
+            sys.exit(1)
+            return None  # Return None if no match is found
+    
+all_datasets = AllDatasets()
 class AGDRRow(SpreadsheetRow):
     '''
     This class represents an entire row of data from a 
@@ -358,7 +378,8 @@ class AGDR(SpreadsheetNode):
                 return []
 
             agdr_projects = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
-            agdr_project_code = self._generate_property("projects.code", self.project_name, None)
+            agdr_project_code = self._generate_property("projects.code", f"{self.project_name}", self.gen3node.getProperty("project_id"))
+            agdr_project_code.gen3_name = "projects.code" # override name
 
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
             for row in data:
@@ -386,12 +407,11 @@ class AGDR(SpreadsheetNode):
                 property = row.get("dataset_name")
                 agdr_name = AGDRProperty(property, g3prop)
 
-                # date collected
-                # TODO: (Ask Claire, not in dictionary)
-                # decision: get rid of it
-                #g3prop = None #self.gen3node.getProperty("date_collected")
-                #property = row.get("date_collected")
-                #agdr_date_collected = AGDRProperty(property, g3prop)
+                # date_collected is collection_date in the dictionary
+                g3prop = self.gen3node.getProperty("collection_date") #Nat: there is a bug and in gen3parser or gen3node, the property for collectiondate are not found, same for sequencing date and most of the dates!! Here I do not mind as we want to be more flexible
+                property = row.get("date_collected")
+                agdr_date_collected = AGDRProperty(property, g3prop)
+                agdr_date_collected.gen3_name = "collection_date"
 
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
@@ -445,14 +465,17 @@ class AGDR(SpreadsheetNode):
                 property = row.get("dataset_id")
                 self._unique_id = property.data
                 agdr_submitter_id = AGDRProperty(property, g3prop)
-
+                
+                #adding the dataset in the list - used by the experiment to change the name into the id
+                all_datasets.add_dataset(agdr_name.get_value(), agdr_submitter_id.get_value())
+                
                 # properties ordered by order displayed in the portal
                 # (not a requirement, a preference)
                 row_data = [
                     agdr_submitter_id,
                     agdr_projects,
                     agdr_project_code,
-                    #agdr_date_collected,
+                    agdr_date_collected,
                     agdr_doi,
                     agdr_application_form,
                     agdr_contact,
@@ -476,8 +499,11 @@ class AGDR(SpreadsheetNode):
                 # no data for this entry
                 # (ok, it's either dataaset or external_dataset)
                 return []
+            
+            agdr_projects = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
+            agdr_project_code = self._generate_property("projects.code", f"{self.project_name}", self.gen3node.getProperty("project_id"))
+            agdr_project_code.gen3_name = "projects.code" # override name           
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
-            agdr_projects = self._generate_property("projects", self.project_name, self.gen3node.getProperty("projects"))
             for row in data:
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
@@ -488,9 +514,8 @@ class AGDR(SpreadsheetNode):
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 self._unique_id = property.data
 
-                # date collected
-                # TODO: (Ask Claire, not in dictionary)
-                # decision: get rid of it
+                # date collected 764
+                # Not yet in the dictionary - future work AGDR-
                 g3prop = None #self.gen3node.getProperty("date_collected")
                 property = row.get("date_collected")
                 agdr_date_collected = AGDRProperty(property, g3prop)
@@ -556,6 +581,7 @@ class AGDR(SpreadsheetNode):
                 row_data = [
                     agdr_submitter_id,
                     agdr_projects,
+                    agdr_project_code,
                     agdr_bioproject_accession,
                     agdr_biosample_accession,
                     #agdr_date_collected,
@@ -584,7 +610,6 @@ class AGDR(SpreadsheetNode):
                 # (ok, Contributors optional)
                 return []
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
-
             agdr_project_id = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
             count = 0
             for row in data:
@@ -603,13 +628,15 @@ class AGDR(SpreadsheetNode):
 
                 # dataset_name
                 g3prop = self.gen3node.getProperty("dataset") # it is None, because it is not extracted from the dictionary by the parser
-                dataset = row.get("dataset_name")
-                agdr_dataset = AGDRProperty(dataset, g3prop)
+                property = row.get("dataset_name")
+                agdr_dataset_name = AGDRProperty(property, g3prop)
+                print(f'agdr_dataset_name {agdr_dataset_name} OH LALAL')
+                agdr_dataset = self._generate_property("dataset.submitter_id", all_datasets.get_value_by_name(agdr_dataset_name.get_value()), g3prop)
                 agdr_dataset.gen3_name = "dataset.submitter_id" # override name
 
                 # TODO: implement function to generate submitter_id for all nodes
                 g3prop = self.gen3node.getProperty("submitter_id")
-                submitter_id = dataset.data + "_" + "CONTACT_" + str(count)
+                submitter_id = agdr_dataset_name.data + "_" + "CONTACT_" + str(count)
                 property = self._generate_property("submitter_id", submitter_id, g3prop)
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 self._unique_id = property.data
@@ -654,7 +681,8 @@ class AGDR(SpreadsheetNode):
                 # create a dataset.submitter_id property
                 g3prop = self.gen3node.getProperty("dataset") 
                 property = row.get("dataset_name")
-                agdr_dataset = AGDRProperty(property, g3prop)
+                agdr_dataset_name = AGDRProperty(property, g3prop)
+                agdr_dataset = self._generate_property("dataset.submitter_id", all_datasets.get_value_by_name(agdr_dataset_name.get_value()), g3prop)
                 agdr_dataset.gen3_name = "dataset.submitter_id" # override name
 
                 # data_description
@@ -677,11 +705,13 @@ class AGDR(SpreadsheetNode):
             sheet_name = None
             try:
                 sheet_name = self._extract_spreadsheet_name(data)
+                print(f"sheet_name  {sheet_name}.")
             except Exception:
                 # no data for this entry
                 # (ok, it's either genome or metagenome)
                 return []
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+
             for row in data:
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
@@ -768,6 +798,11 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("age")
                 property = row.get("** age")
                 agdr_age = AGDRProperty(property, g3prop)
+
+                # ** age_unit
+                g3prop = self.gen3node.getProperty("age_unit")
+                property = row.get("age_unit")
+                agdr_age_unit = AGDRProperty(property, g3prop)
 
                 # ** dev_stage
                 g3prop = self.gen3node.getProperty("developmental_stage")
@@ -915,6 +950,7 @@ class AGDR(SpreadsheetNode):
                     agdr_geo_loc_name,
                     agdr_experiment,
                     agdr_age,
+                    agdr_age_unit,
                     agdr_basis_of_record,
                     agdr_biomaterial_provider,
                     agdr_birth_date,
@@ -946,7 +982,7 @@ class AGDR(SpreadsheetNode):
                     agdr_phenotype,
                     agdr_secondary_identifier,
                     agdr_sex,
-                    #agdr_source_material_id, # not in template, should it be?
+                    #agdr_source_material_id, # not in template, combined with the secondary_identifier field
                     agdr_specimen_collect_device,
                     agdr_specimen_common_name,
                     agdr_specimen_maori_name,
@@ -967,7 +1003,9 @@ class AGDR(SpreadsheetNode):
                 # no data for this entry
                 # (ok, it's either genome or metagenome)
                 return []
+            
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+            
             for row in data:
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
@@ -1047,7 +1085,6 @@ class AGDR(SpreadsheetNode):
                 agdr_coordinate_uncertainty_in_meters = AGDRProperty(property, g3prop)
 
                 # samp_collect_device
-                # TODO: should be named specimen_collect_device?
                 g3prop = self.gen3node.getProperty("specimen_collect_device")
                 property = row.get("samp_collect_device")
                 agdr_specimen_collect_device = AGDRProperty(property, g3prop)
@@ -1130,7 +1167,7 @@ class AGDR(SpreadsheetNode):
                     agdr_minimum_depth_in_meters,
                     agdr_minimum_elevation_in_meters,
                     agdr_secondary_identifier,
-                    #agdr_source_material_id,      # not in template, should it be?
+                    #agdr_source_material_id,      # not in template, combined with the secondary_identifier field
                     agdr_specimen_collect_device,
                     agdr_store_cond,
                     agdr_type
@@ -1142,6 +1179,7 @@ class AGDR(SpreadsheetNode):
             nodes = []
             sheet_name = self._extract_spreadsheet_name(data)
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+            
             for row in data:
                 # sample_id
                 g3prop = self.gen3node.getProperty("submitter_id")
@@ -1268,7 +1306,7 @@ class AGDR(SpreadsheetNode):
 
                 row_data = [
                     agdr_submitter_id,
-                    #agdr_biomaterial_provider, # not in template
+                    #agdr_biomaterial_provider, # not in template - correct, in the experiments_genomic tab
                     agdr_collected_by,
                     agdr_collection_date,
                     agdr_coordinate_uncertainty_in_meters,
@@ -1277,7 +1315,7 @@ class AGDR(SpreadsheetNode):
                     #agdr_genomes, # cannot be determined here
                     agdr_geo_loc_name,
                     agdr_habitat,
-                    #agdr_host, # not in template
+                    #agdr_host, # not in template correct, only in the experiments_metagenomic tab
                     agdr_latitude_decimal_degrees,
                     agdr_longitude_decimal_degrees,
                     #agdr_metagenomes, # cannot be determined here
@@ -1287,8 +1325,8 @@ class AGDR(SpreadsheetNode):
                     agdr_sample_size_value,
                     agdr_sample_title,
                     agdr_secondary_identifier,
-                    #agdr_source_material_id, # not in template
-                    #agdr_specimen_collect_device, # not in template
+                    #agdr_source_material_id, # not in template combined with the secondary_identifier field
+                    #agdr_specimen_collect_device, # not in template, correct, it is unused
                     agdr_specimen_voucher,
                     agdr_store_cond,
                     agdr_tissue,
@@ -1495,10 +1533,11 @@ class AGDR(SpreadsheetNode):
                 property = row.get("sequencing_center")
                 agdr_sequencing_center = AGDRProperty(property, g3prop)
 
-                # sequencing_date
+                # sequencing_date - Note the validator is not able yet to get the props of the sequencing date then I need to add the name for it
                 g3prop = self.gen3node.getProperty("sequencing_date")
                 property = row.get("sequencing_date")
                 agdr_sequencing_date = AGDRProperty(property, g3prop)
+                agdr_sequencing_date.gen3_name = "sequencing_date"
 
                 # size_selection_range
                 g3prop = self.gen3node.getProperty("size_selection_range")
@@ -1515,7 +1554,7 @@ class AGDR(SpreadsheetNode):
                 property = row.get("spike_ins_fasta")
                 agdr_spike_ins_fasta = AGDRProperty(property, g3prop)
 
-                # target_capture_kit
+                # target_capture_kit this does not exist in the spreadsheet at this stage but it is normal
                 g3prop = self.gen3node.getProperty("target_capture_kit")
                 property = row.get("target_capture_kit")
                 agdr_target_capture_kit = AGDRProperty(property, g3prop)
@@ -1610,7 +1649,7 @@ class AGDR(SpreadsheetNode):
                     agdr_size_selection_range,
                     agdr_spike_ins_concentration,
                     agdr_spike_ins_fasta,
-                    agdr_target_capture_kit,
+                    agdr_target_capture_kit, # this is not in the spreadsheet
                     agdr_target_capture_kit_catalog_number,
                     agdr_target_capture_kit_name,
                     agdr_target_capture_kit_target_region,
@@ -1691,6 +1730,14 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("data_category")
                 property = row.get("data_category")
                 agdr_data_category = AGDRProperty(property, g3prop)
+                if agdr_data_category.get_value().lower() == "raw read file":
+                    agdr_data_category = self._generate_property("data_category", "Raw Read File", g3prop)
+                elif agdr_data_category.get_value().lower() == "processed file":
+                    agdr_data_category = self._generate_property("data_category", "Processed File", g3prop)
+                elif agdr_data_category.get_value().lower() == "supplementary file":
+                    agdr_data_category = self._generate_property("data_category", "Supplementary File", g3prop)
+                elif agdr_data_category.get_value().lower() == "aligned reads file":
+                    agdr_data_category = self._generate_property("data_category", "Aligned Reads File", g3prop)
 
                 # genomics_assay
                 # sample_id -- generate parent genomics_assay.submitter_id
@@ -1745,7 +1792,8 @@ class AGDR(SpreadsheetNode):
         def populate_processed_file():
             return populate_supplementary_file(data_category="Processed File")
 
-
+        def populate_aligned_read_index():
+            return populate_supplementary_file(data_category="Aligned Reads File")
 
 
         if self.name.lower() ==               "project": return populate_project_node()
@@ -1763,6 +1811,8 @@ class AGDR(SpreadsheetNode):
         if self.name.lower() ==    "supplementary_file": return populate_supplementary_file()
         if self.name.lower() ==                   "raw": return populate_raw()
         if self.name.lower() ==        "processed_file": return populate_processed_file()
+        #aligned read file missing?
+        if self.name.lower() ==        "aligned_read_index": return populate_aligned_read_index()
         # above are good
 
         # create an AGDRRow object for each row of data
