@@ -93,16 +93,17 @@ def main():
         sys.exit(1)
 
     schema = loadDictionary()
-
-    # is clearly a dictionary
-    # print type of metadata.nodes:
-    #print(f"type of metadata.nodes: {type(metadata.nodes)}")
-    agdrschema = AGDRSchema(schema, metadata.nodes, project=project, program=program)
-
+    
     report_file = None 
     if not write_to_stdout:
         report_file = f"{project}_Validation_Report_{dt.datetime.now().strftime('%Y-%m-%d')}.txt"
     cleanUpFile(report_file)
+
+    # is clearly a dictionary
+    # print type of metadata.nodes:
+    #print(f"type of metadata.nodes: {type(metadata.nodes)}")
+    agdrschema = AGDRSchema(schema, metadata.nodes, report_file, project=project, program=program )
+
     validator = AGDRValidator(schema, agdrschema, report_file)
     validator.validate(validation_verbosity)
 

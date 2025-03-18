@@ -136,21 +136,21 @@ class AGDR(Schema):
         node = "project"
         logger.debug(f"type of g3schema: {type(g3schema)}")
         logger.debug(f"type of g3schema.nodes: {type(g3schema.nodes)}")
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         self._root = self._nodes[node] # set root to project node
 
         node = "dataset"
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "external_dataset"
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "contributor"
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "experiment"
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "genome"
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "metagenome"
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
 
         # need to pass in the submitter_id from the genome and metagenome tables
         # specifically for the sample table
@@ -159,15 +159,15 @@ class AGDR(Schema):
         sample_parents["metagenome"] = [prop.data for prop in self._nodes["metagenome"].getProperties("submitter_id")]
 
         node = "sample"
-        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, parents=sample_parents)
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, parents=sample_parents, outputfile=self.report_output)
 
 
         # some nodes are mushed into a single table in the metadata
         # so, split data out from "file" table from excel
         node = "publication"
         #self._nodes[node] = AGDRNode(node, raw_metadata["dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
-        dataset_pubs = AGDRNode(node, raw_metadata["dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
-        external_dataset_pubs = (AGDRNode(node, raw_metadata["external_dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name))
+        dataset_pubs = AGDRNode(node, raw_metadata["dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
+        external_dataset_pubs = (AGDRNode(node, raw_metadata["external_dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output))
         if dataset_pubs and dataset_pubs.data and external_dataset_pubs and external_dataset_pubs.data:
             dataset_pubs.data.extend(external_dataset_pubs.data)
             self._nodes[node] = dataset_pubs
@@ -181,13 +181,13 @@ class AGDR(Schema):
         # (skip for now, improvement for later)
 
         node = "genomics_assay"
-        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "supplementary_file"
-        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "raw"
-        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "processed_file"
-        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
+        self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
 
     def getNodeCount(self):
         count = 0

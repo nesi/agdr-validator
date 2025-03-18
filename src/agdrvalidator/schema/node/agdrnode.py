@@ -4,6 +4,7 @@ metadata from excel workbook input.
 '''
 import sys
 
+import pandas as pd
 from alive_progress import alive_bar
 
 from agdrvalidator import *  # import AGDR exception types
@@ -192,12 +193,14 @@ class AGDR(SpreadsheetNode):
             return lookup[name]
         return name
 
-    def __init__(self, name, data, gen3node:Gen3Node, project="AGDR999999", program="NZ", parents={}):
+    def __init__(self, name, data, gen3node:Gen3Node, project="AGDR999999", program="NZ", parents={}, outputfile=None):
         self.name = name
         self.gen3name = AGDR.convertName(name)
         self.gen3node = gen3node
         self.project_name = project
         self.program_name = program
+        self.outputfile = outputfile
+        self.messagestodisplay = []
 
         # dictionary of node_name: [sample ids] for when it is ambiguous
         # in the spreadsheet which parent this instance of a node belongs to
@@ -254,7 +257,7 @@ class AGDR(SpreadsheetNode):
                 properties.append(prop)
         return properties
 
-
+    
     def __str__(self):
         if not self.data:
             return f"SpreadsheetNode(name={self.name}, data=[])"
@@ -299,10 +302,36 @@ class AGDR(SpreadsheetNode):
         return is_valid, reasons
         
 
+    def report_spreadsheet_issues(self, reasons):
+        reasons = []
+        if self.outputfile:
+            with open(self.outputfile, "a", encoding="utf-8") as f:
+                # Write the node header line
+                f.write(f"Spreadsheet information\n")
+
+                # Iterate through each reason in the list and write it
+                for message in reasons:
+                    if message:  # Only write non-empty messages
+                        f.write(f"\t{message}\n")
+        else:
+            print(f"Issue with the spreadsheet")
+            for message in reasons:
+                if message:
+                    print(f"\t{message}")
+
+    def add_missing_field_message(self, field, prop, messages, sheet_name):
+        if field.get_value() is None or pd.isna(field.get_value()):
+            message = f'{field.gen3_name} is missing in {sheet_name} in cell {prop.location} \n'
+            messages.append(message)
+    
+    def add_missing_message(self, msg, messages, sheet_name):
+        message = f'{msg} in {sheet_name} \n'
+        messages.append(message)
+
     ############################################################################
     ### Code for populating the AGDRNode with metadata from the spreadsheet
     ############################################################################
-
+    
     def _extract_spreadsheet_name(self, data:SpreadsheetNode):
         sheet_name = set()
         for row in data.data:
@@ -354,8 +383,12 @@ class AGDR(SpreadsheetNode):
                 g3_property = self.gen3node.getProperty("detailed_description")
                 property = row.get("project_description")
                 agdr_description = AGDRProperty(property, g3_property)
+                self.add_missing_field_message(agdr_description, property, self.messagestodisplay, sheet_name)
+                
                 property = row.get("name")
                 agdr_name = AGDRProperty(property, g3_property)
+                self.add_missing_field_message(agdr_name, property, self.messagestodisplay, sheet_name)
+                
                 # need to create a property list
                 row_data = [
                     agdr_dbgap, 
@@ -406,32 +439,38 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("name")
                 property = row.get("dataset_name")
                 agdr_name = AGDRProperty(property, g3prop)
+                self.add_missing_field_message(agdr_name, property, self.messagestodisplay, sheet_name)
 
                 # date_collected is collection_date in the dictionary
                 g3prop = self.gen3node.getProperty("collection_date") #Nat: there is a bug and in gen3parser or gen3node, the property for collectiondate are not found, same for sequencing date and most of the dates!! Here I do not mind as we want to be more flexible
                 property = row.get("date_collected")
                 agdr_date_collected = AGDRProperty(property, g3prop)
                 agdr_date_collected.gen3_name = "collection_date"
+                self.add_missing_field_message(agdr_date_collected, property, self.messagestodisplay, sheet_name)
 
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
                 property = row.get("datatset_description")
                 agdr_detailed_description = AGDRProperty(property, g3prop)
+                self.add_missing_field_message(agdr_detailed_description, property, self.messagestodisplay, sheet_name)
 
                 # investigator_affiliation
                 g3prop = self.gen3node.getProperty("investigator_affiliation")
                 property = row.get("investigator_affiliation")
                 agdr_investigator_affiliation = AGDRProperty(property, g3prop)
+                self.add_missing_field_message(agdr_investigator_affiliation, property, self.messagestodisplay, sheet_name)
 
                 # investigator_name
                 g3prop = self.gen3node.getProperty("investigator_name")
                 property = row.get("investigator_name")
                 agdr_investigator_name = AGDRProperty(property, g3prop)
+                self.add_missing_field_message(agdr_investigator_name, property, self.messagestodisplay, sheet_name)
 
                 # contact
                 g3prop = self.gen3node.getProperty("contact")
                 property = row.get("contact") 
                 agdr_contact = AGDRProperty(property, g3prop)
+                self.add_missing_field_message(agdr_contact, property, self.messagestodisplay, sheet_name)
 
                 # support_source
                 g3prop = self.gen3node.getProperty("support_source")
@@ -576,6 +615,12 @@ class AGDR(SpreadsheetNode):
                 property = row.get("dataset_name")
                 agdr_name = AGDRProperty(property, g3prop)
 
+                if agdr_bioproject_accession.get_value() or agdr_biosample_accession.get_value() or agdr_contact.get_value() or \
+                    agdr_dataset_accession.get_value() or agdr_detailed_description.get_value() or agdr_external_doi.get_value() or \
+                    agdr_investigator_affiliation.get_value() or agdr_investigator_name.get_value() or agdr_name.get_value() or \
+                    agdr_submitted_to_insdc.get_value() or agdr_support_source.get_value():
+                        if not agdr_name.get_value() or not agdr_detailed_description.get_value() or not agdr_investigator_affiliation.get_value() or not agdr_investigator_name.get_value():
+                            self.add_missing_message('External dataset has some cells filled but not enough for an external dataset to be populated, either delete or complete', self.messagestodisplay, sheet_name)
                 # properties ordered by order displayed in the portal
                 # (not a requirement, a preference)
                 row_data = [
@@ -630,7 +675,6 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("dataset") # it is None, because it is not extracted from the dictionary by the parser
                 property = row.get("dataset_name")
                 agdr_dataset_name = AGDRProperty(property, g3prop)
-                print(f'agdr_dataset_name {agdr_dataset_name} OH LALAL')
                 agdr_dataset = self._generate_property("dataset.submitter_id", all_datasets.get_value_by_name(agdr_dataset_name.get_value()), g3prop)
                 agdr_dataset.gen3_name = "dataset.submitter_id" # override name
 
@@ -642,6 +686,11 @@ class AGDR(SpreadsheetNode):
                 self._unique_id = property.data
 
                 count += 1
+
+                if agdr_dataset.get_value() or agdr_institution.get_value() or agdr_name.get_value():
+                        if not agdr_dataset.get_value() or not agdr_institution.get_value() or not agdr_name.get_value():
+                            self.add_missing_message('Contributors table has some cells filled but not enough for a contributor to be populated, either delete or complete', self.messagestodisplay, sheet_name)
+ 
 
                 # properties ordered by order displayed in the portal
                 # (not a requirement, a preference)
@@ -675,6 +724,7 @@ class AGDR(SpreadsheetNode):
                 property = row.get("experiment_name")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 self._unique_id = property.data
+                self.add_missing_field_message(agdr_submitter_id, property, self.messagestodisplay, sheet_name)
 
                 # dataset_name
                 # not able to find dataset? Need to instantiate a Gen3Property object
@@ -684,6 +734,7 @@ class AGDR(SpreadsheetNode):
                 agdr_dataset_name = AGDRProperty(property, g3prop)
                 agdr_dataset = self._generate_property("dataset.submitter_id", all_datasets.get_value_by_name(agdr_dataset_name.get_value()), g3prop)
                 agdr_dataset.gen3_name = "dataset.submitter_id" # override name
+                self.add_missing_field_message(agdr_dataset_name, property, self.messagestodisplay, sheet_name)
 
                 # data_description
                 g3prop = self.gen3node.getProperty("data_description")
@@ -945,6 +996,23 @@ class AGDR(SpreadsheetNode):
                 property = row.get("strain")
                 agdr_strain = AGDRProperty(property, g3prop)
 
+                if agdr_geo_loc_name.get_value() or agdr_experiment.get_value() or agdr_age.get_value() or \
+                    agdr_age_unit.get_value() or agdr_basis_of_record.get_value() or agdr_biomaterial_provider.get_value() or \
+                    agdr_birth_date.get_value() or agdr_birth_location.get_value() or agdr_breed.get_value() or \
+                    agdr_cell_line.get_value() or agdr_collected_by.get_value() or agdr_collection_date.get_value() or \
+                    agdr_coordinate_uncertainty_in_meters.get_value() or agdr_cultivar.get_value() or agdr_culture_collection.get_value() or \
+                    agdr_death_date.get_value() or agdr_developmental_stage.get_value() or agdr_disease.get_value() or \
+                    agdr_ecotype.get_value() or agdr_environmental_medium.get_value() or agdr_genotype.get_value() or \
+                    agdr_growth_protocol.get_value() or agdr_habitat.get_value() or agdr_health_state.get_value() or \
+                    agdr_latitude_decimal_degrees.get_value() or agdr_longitude_decimal_degrees.get_value() or agdr_maximum_depth_in_meters.get_value() or \
+                    agdr_maximum_elevation_in_meters.get_value() or agdr_minimum_depth_in_meters.get_value() or agdr_minimum_elevation_in_meters.get_value() or \
+                    agdr_phenotype.get_value() or agdr_secondary_identifier.get_value() or agdr_sex.get_value() or \
+                    agdr_specimen_collect_device.get_value() or agdr_specimen_common_name.get_value() or agdr_specimen_maori_name.get_value() or \
+                    agdr_specimen_scientific_name.get_value() or agdr_specimen_voucher.get_value() or agdr_store_cond.get_value() or \
+                    agdr_breeding_history.get_value() or agdr_breeding_method.get_value() or agdr_strain.get_value():
+                        if not agdr_experiment.get_value() or not agdr_submitter_id.get_value():
+                            self.add_missing_message('Genome has some cells filled but not enough for a genome to be populated, either delete or complete', self.messagestodisplay, sheet_name)
+
                 row_data = [
                     agdr_submitter_id,
                     agdr_geo_loc_name,
@@ -1010,9 +1078,8 @@ class AGDR(SpreadsheetNode):
                 # properties ordered by order displayed in spreadsheet
                 # (not a requirement, a preference)
 
-                # TODO: tell Claire, should really be specimen_id?
-                # decision: will have a think about it
-                # sample_id 
+                # similar to specimen_id
+                # sample_id confusing with the sample node but Claire is happy with that
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("sample_id")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
@@ -1053,16 +1120,6 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("habitat")
                 property = row.get("habitat")
                 agdr_habitat = AGDRProperty(property, g3prop)
-
-                '''
-                # TODO: thought: want to add some wrapper around 
-                # SpreadsheetRow.get() that will populate some 
-                # validation error if the field is missing
-                #
-                # maybe that's something for the AGDRRow object
-                # to do, it can check if any fields are missing
-                # and report the node type and spreadsheet name
-                '''
 
                 # geo_loc_name
                 g3prop = self.gen3node.getProperty("geo_loc_name")
@@ -1185,7 +1242,8 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("sample_id")
                 agdr_submitter_id = AGDRProperty(property, g3prop)
-                self._unique_id = property.data
+                if property:
+                    self._unique_id = property.data
 
                 # genome or metagenome ID that this sample is
                 # TODO TODO TODO TODO TODO
@@ -1195,7 +1253,13 @@ class AGDR(SpreadsheetNode):
                 property = row.get("genomic_specimen_ID or metagenomic_sample_ID")
 
                 #agdr_genomes = AGDRProperty(property, g3prop)
-                parent_id = property.data
+                if property:
+                    parent_id = property.data
+                else:
+                    parent_id = self.gen3node.getProperty("type")
+                    self.add_missing_message('Sample table has sample_id missing', self.messagestodisplay, sheet_name)
+
+                    
                 property_name = None
                 if "genome" in self._potential_parents and self._potential_parents["genome"]:
                     if parent_id in self._potential_parents["genome"]:
@@ -1416,7 +1480,7 @@ class AGDR(SpreadsheetNode):
                 # sample_id
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("sample_id")
-                submitter_id = property.data + "_" + "GENOMICS_ASSAY_" + str(count)
+                submitter_id = str(property.data) + "_" + "GENOMICS_ASSAY_" + str(count)
                 property = self._generate_property("submitter_id", submitter_id, g3prop)
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 self._unique_id = property.data
@@ -1743,7 +1807,7 @@ class AGDR(SpreadsheetNode):
                 # sample_id -- generate parent genomics_assay.submitter_id
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("sample_id")
-                submitter_id = property.data + "_" + "GENOMICS_ASSAY_" + str(count)
+                submitter_id = str(property.data) + "_" + "GENOMICS_ASSAY_" + str(count)
                 property = self._generate_property("genomics_assay.submitter_id", submitter_id, g3prop)
                 agdr_genomics_assay = AGDRProperty(property, g3prop)
                 agdr_genomics_assay.gen3_name = "genomics_assay.submitter_id" # override name
@@ -1813,6 +1877,9 @@ class AGDR(SpreadsheetNode):
         if self.name.lower() ==        "processed_file": return populate_processed_file()
         #aligned read file missing?
         if self.name.lower() ==        "aligned_read_index": return populate_aligned_read_index()
+        if self.messagestodisplay:
+            self.report_spreadsheet_issues(self.messagestodisplay)
+            sys.exit(1)
         # above are good
 
         # create an AGDRRow object for each row of data
