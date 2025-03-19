@@ -99,8 +99,6 @@ class AGDR(Schema):
                 logger.debug(f"nodelist: {nodelist}")
                 tt = None
                 for node in nodelist:
-                    # type should have been injected already
-                    #node.addProperty(AGDRProperty("type", node._input_name, None))
                     if not tt:
                         tt = AGDRTSVTransformer(node)
                     tt.addRow(node)

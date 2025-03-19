@@ -97,8 +97,6 @@ class Agdr(Parser):
             print(f"An error occurred while analysis the spreadsheet: {e} {sheet_name}. Please make sure that no sections are deleted from the original template even if unused and that they have not been renamed.")
             sys.exit(1)
 
-
-    #def _seek_data(self, sheet_name, startrow, headers):
     def _seek_data(self, sheet_name, startrow):
         '''
         helper method for extracting data for a particular node
@@ -312,19 +310,19 @@ class Agdr(Parser):
 
 
     def _parse_tab(self, tab_name):
-        if tab_name.lower() == "project":
+        if str(tab_name).lower() == "project":
             return self._parse_project()
-        elif tab_name.lower() == "experiments_genomic":
+        elif str(tab_name).lower() == "experiments_genomic":
             return self._parse_experiments_genomic()
-        elif tab_name.lower() == "experiments_metagenomic":
+        elif str(tab_name).lower() == "experiments_metagenomic":
             return self._parse_experiments_metagenomic()
-        elif tab_name.lower() == "samples":
+        elif str(tab_name).lower() == "samples":
             return self._parse_samples()
-        elif tab_name.lower() == "files_instruments":
+        elif str(tab_name).lower() == "files_instruments":
             return self._parse_files_instruments()
         # the version gets in the constructor so that the version may be print
         # to the console before parsing
-        elif tab_name.lower() == "nesi_internal_use":
+        elif str(tab_name).lower() == "nesi_internal_use":
             #self.version = self._parse_nesi_internal_use()
             return {}
         else:
@@ -335,7 +333,7 @@ class Agdr(Parser):
     def _open_excel_helper(self):
         book_path = self.datapath.split("/")[-1]
         extension = book_path.split(".")[-1]
-        if not extension.lower() == "xlsx":
+        if not str(extension).lower() == "xlsx":
             raise Exception("File extension must be .xlsx")
 
     def _open_pyxl(self):

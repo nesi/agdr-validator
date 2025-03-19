@@ -208,11 +208,11 @@ class AGDRValidator(Schema):
         '''
         connected_node_names = set()
         for parent_type in node_type.getParents():
-            if parent_type.name.lower() == "program":
+            if str(parent_type.name).lower() == "program":
                 continue
             # get list of all nodes of parent_type that have been iterated over
             # these are actual metadata values
-            key = parent_type.name
+            key = str(parent_type.name)
             potential_parents = []
             #print(f"key: {key}")
             if key in self._metadata_graph:
@@ -236,25 +236,12 @@ class AGDRValidator(Schema):
                         if node.metadata.getProperty(lookup_prop).get_value() == np.nan:
                             print(f"property {lookup_prop} is nan in node {node.name}")
                             continue
-                        #print(f"node: {node.metadata.uniqueId()}")
-                        #print(f"lookup_prop: {lookup_prop}")
-                        #print(f"node metadata: {node.metadata.getProperty(lookup_prop)}")
-                        #print(f"node metadata value: {node.metadata.getProperty(lookup_prop).get_value()}")
-                        #print(f"uniqueId: {pp.metadata.uniqueId().lower()} == {node.metadata.getProperty(lookup_prop).get_value().lower()}")
                         if pp.metadata.uniqueId().lower().strip() == str(node.metadata.getProperty(lookup_prop).get_value()).lower().strip():
                             node.addParent(pp)
                             pp.addChild(node)
                             node_id = node.metadata.getProperty('submitter_id').get_value() 
                             progress_bar(( progress_count + len(connected_node_names) )/ progress_total)
                             connected_node_names.add(node_id)
-                    #for node_type in node_list: # AGDRNode - could have multiple rows
-                    #    for node in node_type:  # AGDRRow - represents an instance of a node
-                    #        if pp.metadata.uniqueId().lower() == node.metadata.getProperty(lookup_prop).get_value().lower():
-                    #            node.addParent(pp)
-                    #            pp.addChild(node)
-                    #            node_id = node.metadata.getProperty('submitter_id').get_value() 
-                    #            progress_bar(( progress_count + len(connected_node_names) )/ progress_total)
-                    #            connected_node_names.add(node_id)
         else:
             orphans = []
             for node in node_list:

@@ -85,7 +85,7 @@ class SpreadsheetRow(object):
         #logger = logger.setUp(__name__)
         # retrieve a property
         for prop in self.data:
-            if key.lower() == prop.name.lower():
+            if key.lower() == str(prop.name).lower():
                 return prop
         #logger.error(f"Property {key} not found in row")
         # there is some error in parsing with blank columns
