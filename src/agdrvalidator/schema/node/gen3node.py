@@ -41,7 +41,6 @@ class Link():
         self.requiredtype = requiredtype
         self.isComplex = False
 
-
 class ComplexLink(Link):
     # for complex links
     def __init__(self, node_id, multiplicity, linktype, requiredtype, nodes_in_subgroup, requiredtype_subgroup, exclusive_subgroup):
@@ -66,7 +65,7 @@ class Gen3(Node):
 
         self._last_lookup_table = None
         self._properties = []
-
+        
     def __str__(self):
         properties_str = ',\n\t '.join(str(prop) for prop in self._properties)
         return f"Gen3 Node: {self.name}, Properties: [{properties_str}]"
@@ -74,9 +73,9 @@ class Gen3(Node):
     def __repr__(self):
         properties_repr = ',\n\t '.join(str(prop) for prop in self._properties)
         return f"Gen3(name={self.name!r}, properties=[{properties_repr}])"
-
+    
     def getProperty(self, name):
-        for prop in self._properties:
+        for prop in self._properties:       
             #print(f"___+_+_+_______________property: {prop._name}")
             if name == prop._name or name == prop._input_name:
                 return prop
@@ -229,10 +228,6 @@ class Gen3(Node):
         else:
             raise AgdrFormatException(f"property {property} has an invalid $ref: {ref}")
 
-        # TODO TODO TODO TODO TODO
-        # TODO: extract terms from _terms.yaml
-        # TODO TODO TODO TODO TODO
-
         return raw_properties
 
 
@@ -261,8 +256,6 @@ class Gen3(Node):
 
         return raw_result
 
-
-        
     def add_property(self, property):
         if property not in self._properties:
             self._properties.append(property)
@@ -297,7 +290,7 @@ class Gen3(Node):
         
         for property in nested_properties:
             #nest_prop = nested_properties
-            prop = None  
+            prop = None
             if len(nested_properties[property]) == 1:
                 logger.debug("........only one property: " + property)
                 prop = list(nested_properties[property].keys())[0]
@@ -307,7 +300,7 @@ class Gen3(Node):
             if prop:
                 logger.debug(f"\t:prop___: {prop}\t{nested_properties[property][prop]}")
             logger.debug("\t\t:is required?__: " + str(property in required))
-                  
+
             if "type" not in nested_properties[property] and "enum" not in nested_properties[property] and not prop: 
                 #and prop and "oneOf" not in nested_properties[property][prop]:
                 logger.debug(f"\t\t\t:skipping property: {property}")
@@ -319,18 +312,15 @@ class Gen3(Node):
                 # plus gen3 adds the id field anyway
                 logger.debug(f"\t\t\t:skipping property: {property}")
                 continue
-            # TODO TODO TODO TODO TODO
-            # need to extract pattern properly
+            #extract pattern
             pat = None
-            #if "pattern" in nested_properties[property]:
-            #    pat = nested_properties[property]["pattern"]
-            #    print(f"pattern: {pat}")
-            #else:
-            #    #print(nested_properties[property])
-            #    pass
-            #if 'type' in nested_properties:
-            #    pat = self.extractPattern(nested_properties['type'])
-            pat = self.extractPattern(nested_properties)
+            if property in nested_properties[property]:
+                pat = self.extractPattern(nested_properties[property])
+            else:
+                for n_p in nested_properties:
+                    if n_p == property:
+                        pat = self.extractPattern(n_p)
+    
             if "type" in nested_properties[property]:
                 p = Property.Gen3(property, value=nested_properties[property], required=required, type=nested_properties[property]["type"], pattern=pat)
                 logger.debug(f"\t\t\t:_______CASE 1________")
@@ -347,6 +337,7 @@ class Gen3(Node):
                 elif "oneOf" in nested_properties[property][prop]:
                     p = Property.Gen3(property, value=nested_properties[property][prop], required=required, type={"oneOf" : nested_properties[property][prop]["oneOf"]}, pattern=pat)
                     logger.debug(f"\t\t\t:_______CASE 5________")
+            
             # create property object
             self.add_property(p)
 
@@ -365,7 +356,6 @@ class Gen3(Node):
                 p = Property.Gen3(key, value=property[key], required=required, type=property[key]["type"], pattern=pat)
                 # create property object
                 self.add_property(p)
-
 
     def extractPattern(self, nested_props):
         '''

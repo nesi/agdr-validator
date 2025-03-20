@@ -1,6 +1,7 @@
-from agdrvalidator.utils import logger
-from agdrvalidator.schema.node.property import *
 from enum import Enum
+
+from agdrvalidator.schema.node.property import *
+from agdrvalidator.utils import logger
 
 logger = logger.setUp(__name__)
 
@@ -47,3 +48,11 @@ class Gen3(Property):
 
     def isRequired(self):
         return self._isRequired
+    
+    def reset_fields(self):
+        self._name = None
+        self._input_name = None
+        self._value = None
+        self._required = None
+        self._type = None
+        self._pattern = None

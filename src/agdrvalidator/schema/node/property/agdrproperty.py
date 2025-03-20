@@ -59,7 +59,6 @@ class AGDR(SpreadsheetProperty):
         return f"AGDRProperty(name={self.gen3_name}, gen3name={self.gen3_name}, value={self.data}, cell_location=CellLocation({self.location}), required={self.required}, gen3property={self.rule})"
         #return f"AGDRProperty(name={self.name}, value={self.data}, cell_location=CellLocation({self.location}), required={self.required})"
 
-
     def get_value(self):
         return self.data
 
@@ -162,8 +161,9 @@ class AGDR(SpreadsheetProperty):
 
         if not self.rule._pattern:
             return True, None
-        
-        if re.fullmatch(self.rule._pattern, str(self.data).replace(" ", "")):
+        pattern = self.rule._pattern
+        self.rule._pattern = r'{}'.format(pattern)
+        if re.fullmatch(self.rule._pattern, str(self.data)):
             return True, None
         else:
             return False, f"Value {self.name}; {self.gen3_name} '{self.data}' does not match pattern '{self.rule._pattern}'"

@@ -33,7 +33,6 @@ class Gen3(Schema):
     def setTerms(self, terms):
         self._terms = terms
 
-    
     def getUploadOrder(self):
         '''
         Determine upload order required for Gen3 so that metadata nodes 

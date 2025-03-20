@@ -419,6 +419,8 @@ class AGDR(SpreadsheetNode):
             agdr_project_code.gen3_name = "projects.code" # override name
 
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
+            
+            count = 0
             for row in data:
                 '''
                 it would be simpler code if we would iterate over the
@@ -455,6 +457,8 @@ class AGDR(SpreadsheetNode):
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
                 property = row.get("dataset_description")
+                if property is None:
+                    property = row.get("datatset_description") #spelling mistake in the template we had at one point - need to remove in the future
                 agdr_detailed_description = AGDRProperty(property, g3prop)
                 self.messagestodisplay = self.add_missing_field_message(agdr_detailed_description, property, self.messagestodisplay, sheet_name, "dataset")
 
@@ -505,6 +509,7 @@ class AGDR(SpreadsheetNode):
                 #adding the dataset in the list - used by the experiment to change the name into the id
                 all_datasets.add_dataset(agdr_name.get_value(), agdr_submitter_id.get_value())
                 
+                count += 1
                 # properties ordered by order displayed in the portal
                 # (not a requirement, a preference)
                 row_data = [
