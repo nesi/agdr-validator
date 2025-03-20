@@ -194,7 +194,6 @@ class Agdr(Parser):
         nodes["contributor"]      = parse_contributors_node()
         return nodes
 
-
     def _parse_experiments_genomic(self):
         tab_name = "experiments_genomic"
         nodes = {}
@@ -240,7 +239,6 @@ class Agdr(Parser):
         nodes["metagenome"] = parse_metagenomic_node()
         return nodes
     
-
     def _parse_samples(self):
         '''
         the only data on the samples tab are the samples themselves
@@ -259,27 +257,22 @@ class Agdr(Parser):
     def _parse_files_instruments(self):
         tab_name = "files_instruments"
         nodes = {}
+        
         def parse_file_node():
             data = self._seek_data(tab_name, 0)
             sn = SpreadsheetNode("file", data)
             return sn
         
-        # def parse_instrument_node():
-        #     '''
-        #     this has been deprecated because file and instrument 
-        #     metadata have been combined into a single table in the 
-        #     AGDR metadata spreadsheet template
-        #     '''
-        #     startrow = self._seek(tab_name, "Instrument and sequencing metadata")
-        #     logger.debug(f"startrow: {startrow}")
-        #     data = self._seek_data(tab_name, startrow)
-        #     sn = SpreadsheetNode("instruments", data)
-        #     return sn
+        def parse_files_supplementary():
+            startrow = self._seek(tab_name, "Supplementary file metadata")
+            logger.debug(f"startrow: {startrow}")
+            data = self._seek_data(tab_name, startrow)
+            sn = SpreadsheetNode("supplementary_file", data)
+            return sn
         
-        nodes["file"]       = parse_file_node()
-        #nodes["instrument"] = parse_instrument_node()
+        nodes["file"]               = parse_file_node()
+        nodes["supplementary_file"] = parse_files_supplementary()
         return nodes
-
     
     def _parse_nesi_internal_use(self):
         '''

@@ -41,6 +41,8 @@ def getParentUniqueIdProperties(node_name):
         props = ["genomics_assay.submitter_id"]
     if node_name == "raw":
         props = ["genomics_assay.submitter_id"]
+    if node_name == "aligned_read_index":
+        props = ["genomics_assay.submitter_id"]
     if node_name == "supplementary_file":
         props = ["experiment.submitter_id"]
     return props

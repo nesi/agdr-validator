@@ -162,10 +162,10 @@ class AGDR(SpreadsheetProperty):
 
         if not self.rule._pattern:
             return True, None
-        if re.fullmatch(self.rule._pattern, str(self.data)):
+        
+        if re.fullmatch(self.rule._pattern, str(self.data).replace(" ", "")):
             return True, None
         else:
-            #return False, f"Value '{self.data}' does not match pattern '{self.rule._pattern}'"
             return False, f"Value {self.name}; {self.gen3_name} '{self.data}' does not match pattern '{self.rule._pattern}'"
 
     def _is_enum_valid(self):

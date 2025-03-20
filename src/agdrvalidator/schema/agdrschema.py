@@ -180,12 +180,14 @@ class AGDR(Schema):
 
         node = "genomics_assay"
         self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
-        node = "supplementary_file"
+        node = "aligned_reads_index"
         self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "raw"
         self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         node = "processed_file"
         self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
+        node = "supplementary_file"
+        self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
 
     def getNodeCount(self):
         count = 0
