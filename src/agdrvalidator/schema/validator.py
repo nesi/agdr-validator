@@ -376,7 +376,7 @@ class AGDRValidator(Schema):
         - property level -- check that each property is valid
         '''
         if verbosity <= 0:
-            print("NO VALIDATION PERFORMED. \tDid you forget the -v option?")
+            print("NO *METADATA* VALIDATION PERFORMED. \tDid you forget the -v option?")
             return
         verbose = verbosity > 1
         print("PERFORMING VALIDATION...")

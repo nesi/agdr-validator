@@ -80,7 +80,7 @@ def main():
 
     excelpath = args.spreadsheet
     try:
-        metadata = AgdrSpreadsheetParser(excelpath)
+        metadata = AgdrSpreadsheetParser(excelpath, project=project)
         print(f"VALIDATOR VERSION: \t\t{version.version(metadata.version)}\n")
         metadata.parse()
     except FileNotFoundError:

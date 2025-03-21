@@ -331,6 +331,7 @@ class AGDR(SpreadsheetNode):
                 agdr_description = AGDRProperty(property, g3_property)
                 self.messagestodisplay = self.add_missing_field_message(agdr_description, property, self.messagestodisplay, sheet_name, "project")
                 
+                g3_property = self.gen3node.getProperty("name")
                 property = row.get("name")
                 agdr_name = AGDRProperty(property, g3_property)
                 self.messagestodisplay = self.add_missing_field_message(agdr_name, property, self.messagestodisplay, sheet_name, "project")

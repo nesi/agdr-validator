@@ -4,6 +4,7 @@ templates are currently versioned. This file is for the 2024-08-28 version
 of the AGDR metadata template, which corresponds to the 2024-09-10 version 
 of the AGDR metadata dictionary.
 '''
+import datetime
 import sys
 
 import openpyxl
@@ -12,6 +13,8 @@ from alive_progress import alive_bar
 
 from agdrvalidator import AgdrFormatException, BadMetadataSpreadsheetException
 from agdrvalidator.parser import *
+from agdrvalidator.schema.agdrspreadsheet_validator import \
+    AGDRSpreadsheetValidator
 from agdrvalidator.utils import logger
 from agdrvalidator.utils.array import *
 from agdrvalidator.utils.rich_tabular import *
@@ -20,7 +23,7 @@ logger = logger.setUp(__name__)
 
 
 class Agdr(Parser):
-    def __init__(self, datapath):
+    def __init__(self, datapath, project):
         self.datapath = datapath
         self.tabs = ["project",
                      "experiments_genomic",
@@ -34,6 +37,9 @@ class Agdr(Parser):
         self.version = self._parse_nesi_internal_use()
         # dictionary of node name -> SpreadsheetNode object
         self.nodes = {}
+        self.asv = AGDRSpreadsheetValidator()
+        self.spreadsheet_report_output = f"{project}_spreadsheet_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
+
 
     def _seek(self, sheet_name, text):
         '''
@@ -97,18 +103,19 @@ class Agdr(Parser):
             print(f"An error occurred while analysis the spreadsheet: {e} {sheet_name}. Please make sure that no sections are deleted from the original template even if unused and that they have not been renamed.")
             sys.exit(1)
 
-    def _seek_data(self, sheet_name, startrow, section):
+    def _seek_data(self, sheet_name, startrow, node_name):
         '''
         helper method for extracting data for a particular node
         '''
         try:
             sheet = pd.read_excel(self.pd_excel, sheet_name)
             headers = self._seek_fields(sheet_name, startrow)
+            self.asv.add(node_name, headers)
             self.headers = headers
             sections_mapping = {
-                "File...",
-                "Samples",
-                "Experiments"
+                "raw",
+                "sample",
+                "experiment"
             }
             rows, _ = sheet.shape
             text = "Your input"
@@ -126,9 +133,9 @@ class Agdr(Parser):
                                   f"Please make sure that \"{text}\" is on at least the first row of a table that needs to be ingested in {sheet_name} tab "
                                   f"otherwise rows will be missed \n"
                                   f"**************WARNING************ \n")
-                    if section in sections_mapping and r > 10:
+                    if node_name in sections_mapping and r > 10:
                         print(f"**************WARNING************ \n"
-                            f"Please make sure that \"{text}\" is on at least the first row of a table {section} that needs to be ingested in {sheet_name} tab "
+                            f"Please make sure that \"{text}\" is on at least the first row of a table {node_name} that needs to be ingested in {sheet_name} tab "
                             f"otherwise rows will be missed \n"
                             f"**************WARNING************ \n")
                     break
@@ -173,26 +180,26 @@ class Agdr(Parser):
         nodes = {}
         def parse_project_node():
             startrow = self._seek(tab_name, "Project Information")
-            data = self._seek_data(tab_name, startrow, "Project Information")
+            data = self._seek_data(tab_name, startrow, "project")
             sn = SpreadsheetNode("project", data)
             return sn
 
         def parse_dataset_node():
             startrow = self._seek(tab_name, "Datasets")
-            data = self._seek_data(tab_name, startrow, "Datasets")
+            data = self._seek_data(tab_name, startrow, "dataset")
             sn = SpreadsheetNode("dataset", data)
             return sn
 
         def parse_external_dataset_node():
             startrow = self._seek(tab_name, "External Datasets")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow, "External Datasets")
+            data = self._seek_data(tab_name, startrow, "external_dataset")
             sn = SpreadsheetNode("external_dataset", data)
             return sn
 
         def parse_contributors_node():
             startrow = self._seek(tab_name, "Contributors")
-            data = self._seek_data(tab_name, startrow, "Contributors")
+            data = self._seek_data(tab_name, startrow, "contributors")
             sn = SpreadsheetNode("contributor", data)
             return sn
 
@@ -208,14 +215,14 @@ class Agdr(Parser):
         def parse_experiment_node():
             startrow = self._seek(tab_name, "Experiments")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow, "Experiments")
+            data = self._seek_data(tab_name, startrow, "experiment")
             sn = SpreadsheetNode("experiment", data)
             return sn
         
         def parse_genomic_node():
             startrow = self._seek(tab_name, "Genomes")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow, "Genomes")
+            data = self._seek_data(tab_name, startrow, "genome")
             sn = SpreadsheetNode("genome", data)
             return sn
 
@@ -229,14 +236,14 @@ class Agdr(Parser):
         def parse_experiment_node():
             startrow = self._seek(tab_name, "Experiments")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow, "Experiments")
+            data = self._seek_data(tab_name, startrow, "experiment")
             sn = SpreadsheetNode("experiment", data)
             return sn
         
         def parse_metagenomic_node():
             startrow = self._seek(tab_name, "Metagenomes")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow, "Metagenomes")
+            data = self._seek_data(tab_name, startrow, "metagenome")
             sn = SpreadsheetNode("metagenome", data)
             return sn
         nodes["experiment"] = parse_experiment_node()
@@ -251,7 +258,7 @@ class Agdr(Parser):
         tab_name = "samples"
         nodes = {}
         def parse_sample_node():
-            data = self._seek_data(tab_name, 0, "Samples")
+            data = self._seek_data(tab_name, 0, "sample")
             sn = SpreadsheetNode("sample", data)
             return sn
         nodes["sample"] = parse_sample_node()
@@ -262,14 +269,14 @@ class Agdr(Parser):
         nodes = {}
         
         def parse_file_node():
-            data = self._seek_data(tab_name, 0, "File...")
+            data = self._seek_data(tab_name, 0, "raw")
             sn = SpreadsheetNode("file", data)
             return sn
         
         def parse_files_supplementary():
             startrow = self._seek(tab_name, "Supplementary file metadata")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow, "Supplementary file metadata")
+            data = self._seek_data(tab_name, startrow, "supplementary_file")
             sn = SpreadsheetNode("supplementary_file", data)
             return sn
         
@@ -358,4 +365,5 @@ class Agdr(Parser):
                 logger.debug(f"index: {index}")
                 update_nodes(self._parse_tab(tabName))
                 bar()
+        self.asv.validate(self.spreadsheet_report_output)
 

@@ -10,6 +10,8 @@ from alive_progress import alive_bar
 
 import agdrvalidator.utils as utils
 from agdrvalidator import *  # import AGDR exception types
+from agdrvalidator.schema.agdrspreadsheet_validator import \
+    AGDRSpreadsheetValidator
 from agdrvalidator.schema.base import *
 from agdrvalidator.schema.node.agdrnode import AGDR as AGDRNode
 from agdrvalidator.schema.node.property.agdrproperty import \
@@ -46,7 +48,8 @@ class AGDR(Schema):
         if not report:
             self.report_output = f"{self.project_code}_validation_report_{dt.datetime.now().strftime('%Y-%m-%d')}.txt"
 
-
+        self.spreadsheet_report_output = f"{self.project_code}_spreadsheet_validation_report_{dt.datetime.now().strftime('%Y-%m-%d')}.txt"
+        
         self.program_name = program
         if not self.program_name:
             self.program_name = "NZ"
