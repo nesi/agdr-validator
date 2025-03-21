@@ -1358,6 +1358,7 @@ class AGDR(SpreadsheetNode):
         def populate_sample():
             nodes = []
             sheet_name = self._extract_spreadsheet_name(data)
+            agdr_projects = self._generate_property("project_id", f"{self.program_name}-{self.project_name}", self.gen3node.getProperty("project_id"))
             agdr_type = self._generate_property("type", self.gen3name, self.gen3node.getProperty("type"))
             
             for row in data:
@@ -1386,7 +1387,7 @@ class AGDR(SpreadsheetNode):
                 property_name = None
                 if "genome" in self._potential_parents and self._potential_parents["genome"]:
                     if parent_id in self._potential_parents["genome"]:
-                        property_name = "genome.submitter_id"
+                        property_name = "genomes.submitter_id"
                 elif "metagenome" in self._potential_parents and self._potential_parents["metagenome"]:
                     if parent_id in self._potential_parents["metagenome"]:
                         property_name = "metagenomes.submitter_id"
@@ -1394,7 +1395,7 @@ class AGDR(SpreadsheetNode):
                     # assume whichever one was populated
                     # there will be a validation error
                     if "genome" in self._potential_parents and self._potential_parents["genome"]:
-                        property_name = "genome.submitter_id"
+                        property_name = "genomes.submitter_id"
                     elif "metagenome" in self._potential_parents and self._potential_parents["metagenome"]:
                         property_name = "metagenomes.submitter_id"
                 g3prop = self.gen3node.getProperty(property_name) # expect this property to be None though
@@ -1529,6 +1530,7 @@ class AGDR(SpreadsheetNode):
 
                 row_data = [
                     agdr_submitter_id,
+                    agdr_projects,
                     #agdr_biomaterial_provider, # not in template - correct, in the experiments_genomic tab
                     agdr_collected_by,
                     agdr_collection_date,
