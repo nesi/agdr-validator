@@ -1901,10 +1901,12 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("data_category")
                 property = row.get("data_category")
                 agdr_data_category = AGDRProperty(property, g3prop)
-
                 if str(agdr_data_category.get_value()).lower() == data_category.lower():
-                    agdr_data_category = self._generate_property("data_category", data_category, g3prop)
-                elif str(agdr_data_category.get_value()).lower() not in ('raw read file','processed file', 'aligned reads file', 'aligned read index') and data_category.lower() == 'raw read file': #this is to do only once
+                    if data_category.lower() == 'aligned reads index':
+                        agdr_data_category = self._generate_property("data_category", "Aligned Reads File", g3prop)
+                    else:
+                        agdr_data_category = self._generate_property("data_category", data_category, g3prop)
+                elif str(agdr_data_category.get_value()).lower() not in ('raw read file','processed file', 'aligned reads file', 'aligned reads index') and data_category.lower() == 'raw read file': #this is to do only once
                     self.messagestodisplay = self.add_missing_message(f'Invalid data category: {agdr_data_category.get_value()} in location {property.location}', self.messagestodisplay, sheet_name)
                     count += 1
                     continue
@@ -1964,6 +1966,11 @@ class AGDR(SpreadsheetNode):
                 property = row.get("read_pair_number")
                 agdr_read_pair_number = AGDRProperty(property, g3prop)
                 
+                #processed file
+                g3prop = self.gen3node.getProperty("processed_file")
+                property = row.get("file_name") #assuming that they will have the same name
+                agdr_processed_file = AGDRProperty(property, g3prop)
+                
                 properties = [
                     agdr_md5sum,
                     agdr_file_size,
@@ -2010,8 +2017,12 @@ class AGDR(SpreadsheetNode):
                     agdr_type
                 ]
                 
+                if data_category.lower() == "aligned reads index":
+                    row_data.append(agdr_processed_file)
+                
                 if data_category.lower() == "raw read file":
                     row_data.append(agdr_read_pair_number)
+                    
                 nodes.append(AGDRRow(row_data, self.gen3node, sheet_name))
                 
             if self.messagestodisplay:
@@ -2025,7 +2036,7 @@ class AGDR(SpreadsheetNode):
             return populate_file(data_category="Processed File")
 
         def populate_aligned_read_index():
-            return populate_file(data_category="Aligned Reads File")
+            return populate_file(data_category="Aligned Reads Index")
         
         def populate_supplementary_file():
             nodes = []
