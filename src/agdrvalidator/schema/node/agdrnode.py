@@ -861,7 +861,7 @@ class AGDR(SpreadsheetNode):
                 g3prop = self.gen3node.getProperty("basis_of_record")
                 property = row.get("basis_of_record")
                 agdr_basis_of_record = AGDRProperty(property, g3prop)
-
+                
                 # geo_loc_name
                 g3prop = self.gen3node.getProperty("geo_loc_name")
                 property = row.get("geo_loc_name")
@@ -1368,20 +1368,15 @@ class AGDR(SpreadsheetNode):
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 if property:
                     self._unique_id = property.data
+                else:
+                    self.messagestodisplay = self.add_missing_message('Sample table has sample_id missing', self.messagestodisplay, sheet_name)
 
-                # genome or metagenome ID that this sample is
-                # TODO TODO TODO TODO TODO
-                # cannot actually determine from AgdrNode object which
-                # the parent is, it must be figured out from the schema level
-                # so, I guess, return some meta object to be post-processed
                 property = row.get("genomic_specimen_ID or metagenomic_sample_ID")
-
-                #agdr_genomes = AGDRProperty(property, g3prop)
                 if property:
                     parent_id = property.data
                 else:
-                    parent_id = self.gen3node.getProperty("type")
-                    self.messagestodisplay = self.add_missing_message('Sample table has sample_id missing', self.messagestodisplay, sheet_name)
+                    parent_id = self.gen3node.getProperty("type")#filling it with something not to crash
+                    self.messagestodisplay = self.add_missing_message('Sample table has genomic_specimen_ID or metagenomic_sample_ID missing', self.messagestodisplay, sheet_name)
 
                     
                 property_name = None
@@ -1978,7 +1973,7 @@ class AGDR(SpreadsheetNode):
 
                 if str(agdr_data_category.get_value()).lower() == data_category.lower():
                     agdr_data_category = self._generate_property("data_category", data_category, g3prop)
-                elif str(agdr_data_category.get_value()).lower() not in ('raw read file','processed file', 'aligned reads file') and data_category.lower() == 'raw read file': #this is to do only once
+                elif str(agdr_data_category.get_value()).lower() not in ('raw read file','processed file', 'aligned reads file', 'aligned read index') and data_category.lower() == 'raw read file': #this is to do only once
                     self.messagestodisplay = self.add_missing_message(f'Invalid data category: {agdr_data_category.get_value()} in location {property.location}', self.messagestodisplay, sheet_name)
                     count += 1
                     continue

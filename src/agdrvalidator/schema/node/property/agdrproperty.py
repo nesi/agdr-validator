@@ -172,9 +172,13 @@ class AGDR(SpreadsheetProperty):
     def _is_enum_valid(self):
         """Validates if the property data is within allowed enum values."""
         allowed_values = self.rule._type.get('enum', [])
-        if str(self.data).lower().strip() in (str(av).lower() for av in allowed_values):
-            self.data = str(self.data).lower().strip()
-            return True, None
+        for av in allowed_values:
+            if str(self.data).lower().strip() == str(av).lower():
+                self.data = str(av)  # Set self.data to the correctly formatted value
+                return True, None
+        #if str(self.data).lower().strip() in (str(av).lower() for av in allowed_values):
+            #self.data = str(self.data).lower().strip()
+            #return True, None
         return False, f"Value '{self.data}' is not in allowed values {allowed_values}"
 
     def _is_boolean_valid(self):
