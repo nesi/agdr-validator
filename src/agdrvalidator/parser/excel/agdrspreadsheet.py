@@ -97,7 +97,7 @@ class Agdr(Parser):
             print(f"An error occurred while analysis the spreadsheet: {e} {sheet_name}. Please make sure that no sections are deleted from the original template even if unused and that they have not been renamed.")
             sys.exit(1)
 
-    def _seek_data(self, sheet_name, startrow):
+    def _seek_data(self, sheet_name, startrow, section):
         '''
         helper method for extracting data for a particular node
         '''
@@ -105,15 +105,32 @@ class Agdr(Parser):
             sheet = pd.read_excel(self.pd_excel, sheet_name)
             headers = self._seek_fields(sheet_name, startrow)
             self.headers = headers
-
+            sections_mapping = {
+                "File...",
+                "Samples",
+                "Experiments"
+            }
             rows, _ = sheet.shape
             text = "Your input"
+            text2 = "Example input"
             data = []
             datastart = None
             for r in range(startrow, rows):
                 cell_text = str(sheet.loc[r].iat[0]).strip()
                 if cell_text.lower() == text.lower():
                     datastart = r
+                    if r - 1 > 0:
+                        cell_text2 = str(sheet.loc[r-1].iat[0]).strip()
+                        if cell_text2.lower() != text2.lower():
+                            print(f"**************WARNING************ \n"
+                                  f"Please make sure that \"{text}\" is on at least the first row of a table that needs to be ingested in {sheet_name} tab "
+                                  f"otherwise rows will be missed \n"
+                                  f"**************WARNING************ \n")
+                    if section in sections_mapping and r > 10:
+                        print(f"**************WARNING************ \n"
+                            f"Please make sure that \"{text}\" is on at least the first row of a table {section} that needs to be ingested in {sheet_name} tab "
+                            f"otherwise rows will be missed \n"
+                            f"**************WARNING************ \n")
                     break
             else:
                 if datastart == None:
@@ -165,26 +182,26 @@ class Agdr(Parser):
         nodes = {}
         def parse_project_node():
             startrow = self._seek(tab_name, "Project Information")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Project Information")
             sn = SpreadsheetNode("project", data)
             return sn
 
         def parse_dataset_node():
             startrow = self._seek(tab_name, "Datasets")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Datasets")
             sn = SpreadsheetNode("dataset", data)
             return sn
 
         def parse_external_dataset_node():
             startrow = self._seek(tab_name, "External Datasets")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "External Datasets")
             sn = SpreadsheetNode("external_dataset", data)
             return sn
 
         def parse_contributors_node():
             startrow = self._seek(tab_name, "Contributors")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Contributors")
             sn = SpreadsheetNode("contributor", data)
             return sn
 
@@ -200,13 +217,14 @@ class Agdr(Parser):
         def parse_experiment_node():
             startrow = self._seek(tab_name, "Experiments")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Experiments")
             sn = SpreadsheetNode("experiment", data)
             return sn
+        
         def parse_genomic_node():
             startrow = self._seek(tab_name, "Genomes")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Genomes")
             sn = SpreadsheetNode("genome", data)
             return sn
 
@@ -223,19 +241,17 @@ class Agdr(Parser):
         def parse_experiment_node():
             startrow = self._seek(tab_name, "Experiments")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Experiments")
             sn = SpreadsheetNode("experiment", data)
             return sn
+        
         def parse_metagenomic_node():
             startrow = self._seek(tab_name, "Metagenomes")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Metagenomes")
             sn = SpreadsheetNode("metagenome", data)
             return sn
         nodes["experiment"] = parse_experiment_node()
-        # append genomic experiments to metagenomic experiments
-        #nodes["experiment"].update(parse_experiment_node())
-
         nodes["metagenome"] = parse_metagenomic_node()
         return nodes
     
@@ -247,7 +263,7 @@ class Agdr(Parser):
         tab_name = "samples"
         nodes = {}
         def parse_sample_node():
-            data = self._seek_data(tab_name, 0)
+            data = self._seek_data(tab_name, 0, "Samples")
             sn = SpreadsheetNode("sample", data)
             return sn
         nodes["sample"] = parse_sample_node()
@@ -259,14 +275,14 @@ class Agdr(Parser):
         nodes = {}
         
         def parse_file_node():
-            data = self._seek_data(tab_name, 0)
+            data = self._seek_data(tab_name, 0, "File...")
             sn = SpreadsheetNode("file", data)
             return sn
         
         def parse_files_supplementary():
             startrow = self._seek(tab_name, "Supplementary file metadata")
             logger.debug(f"startrow: {startrow}")
-            data = self._seek_data(tab_name, startrow)
+            data = self._seek_data(tab_name, startrow, "Supplementary file metadata")
             sn = SpreadsheetNode("supplementary_file", data)
             return sn
         
