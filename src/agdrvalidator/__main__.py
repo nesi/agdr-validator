@@ -17,10 +17,9 @@ import agdrvalidator.globals.version as version
 def getParser():
     parser = argparse.ArgumentParser(prog="agdrvalidator",
                                      description="Generate validation report for AGDR metadata spreadsheet and/or TSV files for metadata ingest")
-    #parser.add_argument("-d", "--dictionary", help="path to dictionary file", required=False)
     parser.add_argument("-s", "--spreadsheet", help="path to excel input file containing metadata", required=True)
     parser.add_argument("-o", "--stdout", help="write validation report to stdout, otherwise a filename will be generated based on the project code and date of report generation", required=False, action='store_true')
-    parser.add_argument("-p", "--project", help="Project code, e.g. AGDRXXXXX, required for TSV output. If unspecified, project code will default to AGDR99999.", required=False)
+    parser.add_argument("-p", "--project", help="Project code, e.g. XXXXX, required for TSV output. If unspecified, project code will default to 99999.", required=False)
     parser.add_argument("-r", "--program", help="Program name, required for TSV output. If unspecified, program name will default to NZ", required=False)
     parser.add_argument("-t", "--tsv", help="include this flag to convert spreadsheet to TSV output for Gen3 ingest", required=False, action='store_true')
     parser.add_argument("-l", "--loglevel", type=int, help="verbosity level, for debugging. Default is 0, highest is 3", required=False)
@@ -32,8 +31,6 @@ def getParser():
 def cleanUpFile(filename):
     '''
     if a validation report of the same name already exists, remove it
-
-    this is a hacky way to implement overwrite
     '''
     if not filename:
         return
@@ -45,8 +42,6 @@ def cleanUpFile(filename):
 def cleanUpDir(dirpath):
     '''
     if TSV output for the indicated project already exists, remove it
-
-    this is a hacky way to implement overwrite
     '''
     if not dirpath:
         return
@@ -59,7 +54,7 @@ def main():
     args = parser.parse_args()
     project = args.project
     if not project:
-        project = "AGDR99999"
+        project = "99999"
     program = args.program
     verbosity = args.loglevel
     if verbosity:
@@ -100,8 +95,6 @@ def main():
     cleanUpFile(report_file)
 
     # is clearly a dictionary
-    # print type of metadata.nodes:
-    #print(f"type of metadata.nodes: {type(metadata.nodes)}")
     agdrschema = AGDRSchema(schema, metadata.nodes, report_file, project=project, program=program )
 
     validator = AGDRValidator(schema, agdrschema, report_file)
@@ -110,7 +103,7 @@ def main():
     if args.tsv:
         print("\nGENERATING TSV FILES...")
         if not project:
-            project = "AGDR99999"
+            project = "99999"
         directory = f"{project}_TSV_Output_{dt.datetime.now().strftime('%Y-%m-%d')}"
         cleanUpDir(directory)
         print(f"\tDIRECTORY:\t{directory}")

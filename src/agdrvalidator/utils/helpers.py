@@ -1,11 +1,11 @@
 '''
-@Author: Eirian Perkins
-
 This file provides some helper functions for the agdrvalidator package.
 '''
 import re
 from datetime import datetime
+
 import dateutil.parser as dp
+
 
 def boolify(value):
     # for use in TSV generation
@@ -16,7 +16,6 @@ def boolify(value):
         return "false"
     else:
         return "true"
-
 
 def latlonify(value):
     # for use in TSV generation
@@ -53,7 +52,6 @@ def latlonify(value):
     else:
         return "0", "0"
     
-    #print(f"{value} -> {lat}, {lon}")
     return lat, lon
 
 

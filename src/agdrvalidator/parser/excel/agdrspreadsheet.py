@@ -41,7 +41,7 @@ class Agdr(Parser):
         Project Information, Dataset, Contributors, etc.
         '''
         # in the first column, find the row with the text
-        # want to return row number, so the callee knows 
+        # want to return row number, so the callee knows
         # where to start parsing
         try:
             sheet = pd.read_excel(self.pd_excel, sheet_name)
@@ -139,15 +139,6 @@ class Agdr(Parser):
 
             # now extract all rows of data until the row is empty
             for r in range(datastart, rows):
-                
-                # don't do this, it removes all None values (unpopulated cells)
-                # what we want is to remove all None values at the end of the row
-                #row = list(sheet.loc[r].dropna().values)[1:]
-
-                #while row and pd.isna(row[-1]):
-                #    row.pop()
-                # the above is actually wrong, I want to stop popping rows
-                # when I hit the same length as the headers
                 row = list(sheet.loc[r].values)[1:]
                 row = row[:len(headers.data)]
                 logger.debug(f"row: {row}")
@@ -228,12 +219,9 @@ class Agdr(Parser):
             sn = SpreadsheetNode("genome", data)
             return sn
 
-        #exp_nodes = parse_experiment_node()
-        #print(f"exp_nodes: {exp_nodes}")
         nodes["experiment"] = parse_experiment_node()
         nodes["genome"]    = parse_genomic_node()
         return nodes
-
 
     def _parse_experiments_metagenomic(self):
         tab_name = "experiments_metagenomic"
@@ -268,7 +256,6 @@ class Agdr(Parser):
             return sn
         nodes["sample"] = parse_sample_node()
         return nodes
-
 
     def _parse_files_instruments(self):
         tab_name = "files_instruments"
@@ -317,7 +304,6 @@ class Agdr(Parser):
             version_string = str(sheet.loc[r].iat[0]).strip()
         return version_string
 
-
     def _parse_tab(self, tab_name):
         if str(tab_name).lower() == "project":
             return self._parse_project()
@@ -329,15 +315,11 @@ class Agdr(Parser):
             return self._parse_samples()
         elif str(tab_name).lower() == "files_instruments":
             return self._parse_files_instruments()
-        # the version gets in the constructor so that the version may be print
-        # to the console before parsing
         elif str(tab_name).lower() == "nesi_internal_use":
-            #self.version = self._parse_nesi_internal_use()
             return {}
         else:
             raise BadMetadataSpreadsheetException("Tab not recognized")
         return {}
-
 
     def _open_excel_helper(self):
         book_path = self.datapath.split("/")[-1]
@@ -353,7 +335,6 @@ class Agdr(Parser):
         self._open_excel_helper()
         return pd.ExcelFile(self.datapath)
 
-
     def parse_old(self):
         with alive_bar(title="\tParsing AGDR spreadsheet", length=len(self.tabs)) as bar:
             for index, tabName in enumerate(self.tabs):
@@ -366,20 +347,15 @@ class Agdr(Parser):
         def update_nodes(parsed_data):
             for key in parsed_data:
                 if key in self.nodes:
-                    #print(f"pre: {self.nodes[key]}")
-                    #print(f"____extending {key}")
                     # extend the list of SpreadsheetRow objects
                     self.nodes[key].update(parsed_data[key]) 
-                    #print(f"post: {self.nodes[key]}")
                 else:
-                    #print(f"____updating  {key}")
                     # add the key-value pair to the dictionary
                     self.nodes[key] = parsed_data[key]
         with alive_bar(title="\tParsing AGDR spreadsheet", length=len(self.tabs)) as bar:
             for index, tabName in enumerate(self.tabs):
                 logger.debug(f"tabName: {tabName}")
                 logger.debug(f"index: {index}")
-                #self.nodes.update(self._parse_tab(tabName))
                 update_nodes(self._parse_tab(tabName))
                 bar()
 

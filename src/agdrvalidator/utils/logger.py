@@ -1,6 +1,4 @@
 '''
-@Author: Eirian Perkins
-
 This file provides a function to set up a logger for the package.
 
 A class is useful for setting up formatting and handlers for the logger.

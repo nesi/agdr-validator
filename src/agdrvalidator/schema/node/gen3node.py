@@ -190,7 +190,6 @@ class Gen3(Node):
         ref = ref.split("#")
         category = ref[0]
         key = ref[1].split("/")[-1]
-        #print(f'key {key} then category {category} for ref {ref}')
         if category:
             self._last_lookup_table = category 
         else:
@@ -230,7 +229,6 @@ class Gen3(Node):
 
         return raw_properties
 
-
     def _extract_property(self, properties, property, terms, definitions, settings):
         # extraction for properties with no nesting at top level
         # there may be some nesting in properties
@@ -241,7 +239,6 @@ class Gen3(Node):
 
         for item in value:
             if item == "term":
-                # TODO create term object
                 logger.warning(f"term found in property: {key}.\tSKIPPING" )
             elif item == "$ref":
                 logger.debug("~~~~ref")
@@ -249,11 +246,9 @@ class Gen3(Node):
                 for prop in extracted:
                     raw_result[prop] = extracted[prop]
             elif item == "enum":
-                # TODO create enum object
                 raw_result["type"] = {item: value[item]}
             else:
                 raw_result[item] = value[item]
-
         return raw_result
 
     def add_property(self, property):
@@ -271,16 +266,12 @@ class Gen3(Node):
             else:
                 p = self._extract_property(properties, property, terms, definitions, settings)
                 unnested_properties.append({property: p})
-            # still need to extract terms, but it can be skipped for the moment
         logger.debug("[__extracted properties from refs:__]")
-        # there are 2 lists of properties here for debugging purposes only
-        # List to collect new properties
 
         additional_properties = []
-        #type was missing from few tsv because sample and other have a ref in a ref e.g. organism_properties which is refering ubiquitous_properties which need to be processed too
+        #type was missing from few tsv because sample and other have a ref in a ref e.g. organism_properties which is referring ubiquitous_properties which need to be processed too
         for property in nested_properties:
             if property == "$ref":
-                # Do something
                 new_nested_properties = self._extract_properties_from_ref(nested_properties[property], terms, definitions, settings, isTopLevel=True)
                 for new_property in new_nested_properties:
                     additional_properties.append(new_property)
@@ -289,7 +280,6 @@ class Gen3(Node):
             nested_properties.update({prop: new_nested_properties[prop] for prop in additional_properties})
         
         for property in nested_properties:
-            #nest_prop = nested_properties
             prop = None
             if len(nested_properties[property]) == 1:
                 logger.debug("........only one property: " + property)
@@ -302,14 +292,9 @@ class Gen3(Node):
             logger.debug("\t\t:is required?__: " + str(property in required))
 
             if "type" not in nested_properties[property] and "enum" not in nested_properties[property] and not prop: 
-                #and prop and "oneOf" not in nested_properties[property][prop]:
                 logger.debug(f"\t\t\t:skipping property: {property}")
-                # e.g. if property is "id", skip it for now
-                # id is system-generated
                 continue
             if property == "id":
-                # makes pattern application way too complicated,
-                # plus gen3 adds the id field anyway
                 logger.debug(f"\t\t\t:skipping property: {property}")
                 continue
             #extract pattern

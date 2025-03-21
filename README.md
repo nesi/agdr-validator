@@ -81,7 +81,7 @@ with M the Major version, m the minor version and dictv the version of the dicti
 Happy path, no errors in the spreadsheet (note that `-o` pipes the validation 
 report to stdout):
 ```
-(venv) eirian> agdrvalidator -s TestValues2.xlsx -v -o
+(venv) > agdrvalidator -s TestValues2.xlsx -v -o
 VALIDATOR VERSION: 		1.2.20220923
 
 	Parsing AGDR spreadsheet |███| 3 in 0.1s (17.15/s)
@@ -100,7 +100,7 @@ Sad path, error discovered (duplicate `submitter_id` in Environmental field from
 which is why the error message refers to `metagenome`, `sample`, and `aliquot` nodes even though the 
 spreadsheet error is in the `Environmental` field. 
 ```
-(venv) eirian> cat AGDR99999_Validation_Report_2024-03-28.txt
+(venv) > cat 99999_Validation_Report_2024-03-28.txt
 METAGENOME
 	ERROR: duplicate submitter_id found for metagenome node: CPc
 	ERROR: duplicate submitter_id found for metagenome node: CPc
@@ -153,4 +153,4 @@ it would be most helpful if you could re-run the command with the
 `-l 3` option. This will generate a log file with the highest verbosity 
 level, which will help developers to diagnose the issue.
 
-Thank you to Eirian Perkins to have created the first version of the validator on which this validator is based on. 
+Thank you to Eirian Perkins to have created the first version which this validator is based on. 

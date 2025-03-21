@@ -45,7 +45,6 @@ def getParentUniqueIdProperties(node_name):
         props = ["experiment.submitter_id"]
     return props
 
-
 ValidationError = Enum('ValidationError',
     [
         "INFO",
@@ -84,14 +83,12 @@ class Dataset(object):
         self.children = []
         self.parents = []
 
-
     def addChild(self, child):
         logger.debug(f"adding child {child.name} to {self.name}")
         for c in self.children:
             if c.metadata.uniqueId() == child.metadata.uniqueId():
                 return
         self.children.append(child)
-
 
     def addParent(self, parent):
         logger.debug(f"adding parent {parent.name} to {self.name}")
@@ -109,7 +106,6 @@ class Dataset(object):
         result["parents"] = [(x.name, x.metadata.uniqueId()) for x in self.parents]
         return str(result)
     
-
 class AGDRValidator(Schema):
     def __init__(self, gen3schema, agdrschema, outputfile=None):
         self._gen3schema = gen3schema # contains dictionary structure
@@ -140,11 +136,6 @@ class AGDRValidator(Schema):
         may be duplicated across different tables, represented as 
         dictionary values).
         '''
-        # this code explodes and I'm not sure why 
-        # just don't call it for now
-        #
-        # it also prints by alphabetic order of dictionary keys,
-        # which is not the most helpful
         pp = pprint.PrettyPrinter(indent=4)
         pp.pprint(self._metadata_graph)
 
@@ -160,8 +151,6 @@ class AGDRValidator(Schema):
         implementation.
         '''
         logger.debug(f"___adding node {node.name} to metadata graph___")
-        # TODO: currently, not clear if I want to use
-        # node.name or node.gen3name
         if node.name not in self._metadata_graph:
             # add the node to the graph for the first time
             logger.debug(f"adding node {node.name} to metadata graph")
@@ -218,14 +207,11 @@ class AGDRValidator(Schema):
             if key in self._metadata_graph:
                 potential_parents = self._metadata_graph[key]
             lookup_props = [] 
-            #print(f"all potential parents: {potential_parents}")
             if len(node_list) > 0:
                 lookup_props = getParentUniqueIdProperties(node_list[0].name)
-                #print(f"lookup_props: {lookup_props}")
             else:
                 logger.debug(f"no nodes of type {node_type.name} found in metadata graph")
             for pp in potential_parents:
-                #print(f"potential parent: {pp.metadata.uniqueId()}")
                 # check if parent's primary key matches any of the children 
                 # (this way, we loop through the parents only once)
                 for lookup_prop in lookup_props:
@@ -263,14 +249,11 @@ class AGDRValidator(Schema):
                         entry = ValidationEntry(ValidationError.INFO, msg)
 
                         validationError = False
-                        # TODO: check if verbose validation is enabled, and if so, warn about optional links
                     else:
                         msg = f"ERROR:\tno REQUIRED link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
                         logger.info(msg)
                         entry = ValidationEntry(ValidationError.ERROR, msg)
 
-                    # self._node_validation_errors:
-                    # node type -> submitter_id -> list of ValidationEntry objects
                     if node.name not in self._node_validation_errors:
                         self._node_validation_errors[node.name] = {}
                     if node_id not in self._node_validation_errors[node.name]:
@@ -283,119 +266,6 @@ class AGDRValidator(Schema):
                 progress_bar(( orphan_count + progress_count + len(connected_node_names) )/ progress_total)
 
         return progress_count + len(node_list)
-
-
-#######
-
-#not called anywhere for the moment ???
-    # def _addParentToNodeInGraphData(self, node, parent):
-    #     '''
-    #     This function does most of the work to validate a schema. In order 
-    #     to connect a node to its parent, it must first find the parent
-    #     in the metadata graph. It does this by looking for a match between
-    #     the uniqueId of the parent and the uniqueId of the node. If a match
-    #     is found, the node is connected to the parent. If no match is found,
-    #     validation errors are generated and collected, and the 
-    #     node connection algorithm continues until all instances of nodes
-    #     provided by the spreadsheet input are visited.
-    #     '''
-    #     # node is a Dataset type
-    #     # parent is a Gen3Node type
-    #     logger.debug("\n\n...")
-    #     logger.debug(f"adding parent __{parent.name}__ to node ___{node.name}___")
-    #     key = parent.name
-    #     if key not in self._metadata_graph:
-    #         # this is OK, example if node is sample, and it could have one of 
-    #         # several parents (metagenome, organism, population genomics)
-    #         #
-    #         # When this function is called for a particular node, it is known
-    #         # that all of its parents have been visited, and therefore
-    #         # will have been added to the metadata graph. If a parent is not
-    #         # found, it is either because the parent is not required, or 
-    #         # there is invalid metadata provided as input to the program.
-    #         #
-    #         # If there is an error, it will be detected when an orphaned node
-    #         # tries to find its parents in the graph.
-    #         logger.info(f"parent {key} not found in metadata graph for child {node.name}")
-    #         return
-    #     potential_parents = self._metadata_graph[key]
-    #     logger.debug(f"number of potential parents: {len(potential_parents)}")
-    #     logger.debug("------------------------------------------------------")
-    #     logger.debug(f"current properties of {node.name}:")
-    #     logger.debug("------------------------------------------------------")
-    #     logger.debug("\t---------------gen3-----------------")
-    #     for prop in node.metadata.getGen3Node()._properties:
-    #         logger.debug(f"\t{prop._name}: \t {node.metadata.getProperty(prop._name)}")
-    #     logger.debug("\t---------------excel----------------")
-    #     for prop in node.metadata._properties:
-    #         logger.debug(f"\t{prop._name}: \t {node.metadata.getProperty(prop._name)}")
-    #     logger.debug("------------------------------------------------------\n\n")
-    #     lookup_props = getParentUniqueIdProperties(node.name)
-    #     matchFound = False
-    #     pp = None # define here so it's in scope later for disconnected nodes
-    #     for pp in potential_parents:
-    #         logger.debug(f"parent: {node.name} {node.metadata.getProperty(lookup_props[0])}")
-    #         logger.debug(f"potential parent: {pp.name} {pp.metadata.getProperty('submitter_id')}")
-    #         logger.debug(f"+_+_+_+_____lookup prop: {lookup_props[0]}")
-    #         logger.debug(f"all properties of {key}:")
-    #         # from the data dictionary input
-    #         logger.debug("\t---------------gen3-----------------")
-    #         for prop in pp.metadata.getGen3Node()._properties:
-    #             logger.debug(f"\t{prop._name}")
-    #             logger.debug(f"\t{pp.metadata.getProperty(prop._name)}\n\n")
-    #         # from the spreadsheet input
-    #         #for prop in pp.metadata._properties:
-    #         #    print(f"\t{prop._name}")
-    #         #    print(f"\t{pp.metadata.getProperty(prop._name)}")
-    #         #    print()
-    #         for lookup_prop in lookup_props:
-    #             if pp.metadata.uniqueId().lower().strip() == node.metadata.getProperty(lookup_prop).get_value().lower().strip():
-    #                 logger.debug(f"______setting parent...______")
-    #                 node.addParent(pp)
-    #                 pp.addChild(node)
-    #                 matchFound = True
-    #                 break
-    #             else:
-    #                 logger.debug(f"no match: {pp.metadata.uniqueId()} != {node.metadata.getProperty(lookup_prop).get_value()}")
-    #     else:
-    #         if not matchFound:
-    #             # TODO: I can start adding validation error objects from here
-    #             # rather than iterating through again, I am trying to link up the graph 
-    #             # and it fails here, so no need to iterate through again
-    #             #
-    #             # actually, I want to distinguish between optional and required links
-    #             # I can do that here though
-    #             #
-    #             # note also that gen3 doesn't really model child links
-    #             # so, just need to look at parent links, and bob's your uncle
-
-    #             validationError = True
-    #             for plink in node.metadata.getGen3Node().getParentLinks():
-    #                 if pp and str(plink.node_id).lower().strip() == str(pp.name).lower().strip():
-    #                     node_id = node.metadata.getProperty('submitter_id').get_value()
-    #                     entry = None
-    #                     if plink.requiredtype == RequiredType.OPTIONAL:
-    #                         msg = f"INFO:\tno optional link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
-    #                         logger.debug(msg)
-    #                         entry = ValidationEntry(ValidationError.INFO, msg)
-
-    #                         validationError = False
-    #                     else:
-                            
-    #                         msg = f"ERROR:\tno REQUIRED link found connecting parent [{plink.node_id}] link to child [{node.name}:{node_id}]"
-    #                         logger.error(msg)
-    #                         entry = ValidationEntry(ValidationError.ERROR, msg)
-
-    #                     # self._node_validation_errors:
-    #                     # node type -> submitter_id -> list of ValidationEntry objects
-    #                     if node.name not in self._node_validation_errors:
-    #                         self._node_validation_errors[node.name] = {}
-    #                     if node_id not in self._node_validation_errors[node.name]:
-    #                         self._node_validation_errors[node.name][node_id] = []
-    #                     self._node_validation_errors[node.name][node_id].append(entry)
-
-    #                     break
-
 
     def findNode(self, node_name, submitter_id):
         '''
@@ -414,11 +284,8 @@ class AGDRValidator(Schema):
                 return node 
         raise AgdrNotFoundException(f"Node {node_name} with submitter_id {submitter_id} not found in metadata graph.")
 
-
     def _findParents(self, child):
-        '''
-        ??? not used
-        '''
+
         parents = []
         node_name = child.getGen3NodeName()
         submitter_id = child.getProperty("submitter_id")
@@ -449,8 +316,6 @@ class AGDRValidator(Schema):
 
         nodeCount = self._agdrschema.getNodeCount() 
         progressCount = 0
-        # use manual mode because we have a slight overcount and go over 100% with auto mode
-        #with alive_bar(title="Building node graph", stats=False, manual=True) as bar:
         with alive_bar(title="\tBuilding metadata graph ", stats=True, manual=True) as bar:
             # node order is tightly coupled to walk() being implemented 
             # correctly in the self._gen3schema. 
@@ -471,7 +336,6 @@ class AGDRValidator(Schema):
                 metadata_to_add = []
                 for md in metadata:
                     ds = Dataset(node_type.name, md)
-                    #self._addNodeToGraphData(ds) # avoid this due to performance hit
                     metadata_to_add.append(ds)
                 else:
                     logger.debug("____bulk adding nodes to graph data____")
@@ -501,19 +365,13 @@ class AGDRValidator(Schema):
         something reasonably cogent to the researcher or support staff 
         working on metadata ingest.
         '''
-        #for node_type in self._metadata_graph:
-        #    print("node type:")
-        #    print(node_type)
-        #    return node_type
-        #self.showMetadataGraph()
-        #print(self._metadata_graph.keys())
         for node_type in self._metadata_graph:
             yield(node_type)
 
     def validate(self, verbosity=1):
         '''
         - schema level   -- check if the graph structure is valid 
-          (each node has expected nodes and children)
+            (each node has expected nodes and children)
         - node   level   -- check that each node has required properties 
         - property level -- check that each property is valid
         '''
@@ -527,7 +385,6 @@ class AGDRValidator(Schema):
         self._validateSchema(verbose)
         print("...VALIDATION COMPLETE")
 
-
     def _report_complete(self):
         msg = ""
         if not self._validation_errors_detected:
@@ -538,8 +395,6 @@ class AGDRValidator(Schema):
         else:
             print(msg)
 
-
-    
     def _report_header(self, node_type):
         msg = f"\t{node_type.upper()}"
         if self._outputfile:
@@ -549,7 +404,6 @@ class AGDRValidator(Schema):
         else:
             print(msg)
 
-    
     def _report_node(self, validation_entry):
         if self._outputfile:
             with open(self._outputfile, "a", encoding="utf-8") as f:
@@ -559,48 +413,7 @@ class AGDRValidator(Schema):
             print(f"\t\t{validation_entry.message}")
             pass
 
-    #def _report_node_properties(self, node_type, node, verbose):
-    #    #isValid, reasons = node.metadata.validate(verbose)
-    #    isValid, reasons = node.metadata.validate()
-    #    if not isValid:
-    #        self._validation_errors_detected = True
-    #        if self._outputfile:
-    #            with open(self._outputfile, "a", encoding="utf-8") as f:
-    #                f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
-    #                for reason in reasons:
-    #                    f.write(f"\t{reason}\n")
-    #                    f.write(f"\t\t{reasons[reason]}\n")
-    #        else:
-    #            print(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]")
-    #            for reason in reasons:
-    #                print(f"\t{reason}")
-    #                print(f"\t\t{reasons[reason]}")
-    #        # will in turn call property-based validation
-
-    ## does not work
-    #def _report_node_properties(self, node_type, node, verbose):
-    #    #isValid, reasons = node.metadata.validate(verbose)
-    #    isValid, reasons = node.metadata.validate()
-    #    if not isValid:
-    #        self._validation_errors_detected = True
-    #        if self._outputfile:
-    #            with open(self._outputfile, "a", encoding="utf-8") as f:
-    #                # Write the node header line once
-    #                f.write(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]\n")
-    #                
-    #                # Iterate through each reason and write it as a complete message
-    #                for message in reasons:
-    #                    if message:
-    #                        f.write(f"\t{message} - Location: {node.metadata.location}\n")  # Adjusting to include location info
-    #        else:
-    #            print(f"{node_type} [{node.metadata.getProperty('submitter_id').get_value()}]")
-    #            for message in reasons:
-    #                if message:
-    #                    print(f"\t{message} - Location: {node.metadata.location}")
-        
-    # issue with multiple lines
     def _report_node_properties(self, node_type, node, verbose):
-        #isValid, reasons = node.metadata.validate(verbose)
         isValid, reasons = node.metadata.validate()
         if not isValid:
             self._validation_errors_detected = True
@@ -619,8 +432,6 @@ class AGDRValidator(Schema):
                     if message:
                         print(f"\t{message}")
         
-
-    
     def _validateSchema(self, verbose, outputfile=None):
         '''
         This is a schema level validation, checking that the graph
@@ -646,8 +457,6 @@ class AGDRValidator(Schema):
         largely to make the validation algorithm more clear where this 
         function is called.
         '''
-        #print("called _validateSchema")
-        #print(f"metadata graph: {self._metadata_graph}")
 
         with alive_bar(len(self._metadata_graph), title="\tValidating schema       ") as bar:
             for node_type in self.walk():
@@ -678,7 +487,6 @@ class AGDRValidator(Schema):
                 # report validation errors
                 for node in self._metadata_graph[node_type]:
                     # schema-based validation (node connectivity)
-                    #node_id = node.metadata.getProperty('submitter_id').get_value()
                     node_id = None
                     if node.name == "project":
                         node_id = node.metadata.getProperty("code").get_value()
@@ -697,7 +505,6 @@ class AGDRValidator(Schema):
                                         header_reported = True
                                     self._validation_errors_detected = True
                                     self._report_node(entry)
-
 
                     # node-based validation (all required properties are present)
                     self._report_node_properties(node_type, node, verbose)

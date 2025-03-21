@@ -1,4 +1,5 @@
 import pathlib
+
 from setuptools import find_packages, setup
 
 # The directory containing this file
@@ -11,13 +12,13 @@ REQUIREMENTS = (HERE / "requirements.txt").read_text().splitlines()
 # This call to setup() does all the work
 setup(
     name="agdrvalidator",
-    version="0.0.1",
+    version="1.3",
     description="Spreadsheet Validation App",
     long_description=README,
     long_description_content_type="text/markdown",
     url="",
-    author="Eirian Perkins",
-    author_email="eirian.perkins@nesi.org.nz",
+    author="NeSI",
+    author_email="gasupport@nesi.org.nz",
     license="Copyright NeSI",
     classifiers=[
         "Programming Language :: Python :: 3",

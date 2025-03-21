@@ -1,16 +1,8 @@
 '''
-A schema (collection of nodes) that holds the data read in from an 
-excel spreadsheet. It is compatible with the AGDR dictionary 
-version 2025-01-24.
-
-An AGDR schema object defined here "has-a" Gen3 schema object, but 
-it would be better to keep those separate and have a Validator 
-object that "has-a" Gen3 schema and "has-a" AGDR schema. 
-
-This improved implementation should be done for the new AGDR dictionary.
+A schema (collection of nodes) that holds the data read in from an
+excel spreadsheet. It is compatible with the latest AGDR dictionary
 '''
 
-#from agdrvalidator.transformer.agdrtsv_2024_03_25 import AGDRTSVTransformer
 import datetime as dt
 from typing import Dict
 
@@ -27,16 +19,13 @@ from agdrvalidator.schema.node.property.gen3property import \
 from agdrvalidator.transformer.agdrtsv import AGDRTSVTransformer
 from agdrvalidator.utils import logger
 from agdrvalidator.utils.helpers import *
-#from agdrvalidator.utils.tabular import * # Table()
-from agdrvalidator.utils.rich_tabular import *  # Table()
+from agdrvalidator.utils.rich_tabular import *
 
 logger = logger.setUp(__name__)
 
 class AGDR(Schema):
     def __init__(self, gen3_dictionary, spreadsheet_metadata: Dict[str, AGDRNode], report=None, project="AGDR99999", program="NZ"):
-        #self._root = root
         self._gen3_dictionary = gen3_dictionary
-        #self._metadata = self._consolidate(spreadsheet_metadata)
         self.project_code = project
         self.program_name = program
 
@@ -51,7 +40,7 @@ class AGDR(Schema):
 
         self.project_code = project
         if not self.project_code:
-            self.project_code = "AGDR99999"
+            self.project_code = "99999"
 
         self.report_output = report
         if not report:
@@ -66,14 +55,12 @@ class AGDR(Schema):
 
         self._root = None
         self._nodes = {}
-        #self._consolidate()
         self._metadata = self._consolidate(spreadsheet_metadata)
 
     def __iter__(self):
         return iter(self._nodes.items())
 
     def walk(self):
-        # TBD: walk in the expected order (root to leaves)
         for node in self._nodes:
             yield self._nodes[node]
 
@@ -88,13 +75,10 @@ class AGDR(Schema):
             if not nodelist:
                 continue
             num_files_to_write += len(nodelist)
-        # TODO: configure output dir with argparse
         nodecount = 0
-        #for nodelist in self.walk():
         with alive_bar(num_files_to_write, title="\tWriting metadata to TSVs") as bar:
             for nodelist in self.walkDictStructure():
                 if not nodelist:
-                    # not sure why this is happening, TBD: investigate
                     continue
                 logger.debug(f"nodelist: {nodelist}")
                 tt = None
@@ -117,19 +101,13 @@ class AGDR(Schema):
         create a new AGDRProperty object and a new Gen3Property object, 
         for all nodes, create a new AGDRNode object and a new Gen3Node object,
         which will build up the AGDR schema.
-
-        this replaces the old _graphify() function, which is a misnomer
-        because here we are building tabular data without any graph structure.
-        (self._nodes is a dictionary of node name -> list of AGDRNode objects,
-        which is the "tabular" data)
-
-        the validator class will build the graph structure from the schema
+        The validator class will build the graph structure from the schema
         created by this class.
         '''
 
         g3schema = self._gen3_dictionary # shorter name
 
-        # most nodes have a 1-1 mapping with the Gen3 schema and 
+        # most nodes have a 1-1 mapping with the Gen3 schema and
         # the tables from in the metadata spreadsheet
         node = "project"
         logger.debug(f"type of g3schema: {type(g3schema)}")
@@ -159,11 +137,9 @@ class AGDR(Schema):
         node = "sample"
         self._nodes[node] = AGDRNode(node, raw_metadata[node], g3schema.nodes[node], project=self.project_code, program=self.program_name, parents=sample_parents, outputfile=self.report_output)
 
-
         # some nodes are mushed into a single table in the metadata
         # so, split data out from "file" table from excel
         node = "publication"
-        #self._nodes[node] = AGDRNode(node, raw_metadata["dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name)
         dataset_pubs = AGDRNode(node, raw_metadata["dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
         external_dataset_pubs = (AGDRNode(node, raw_metadata["external_dataset"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output))
         if dataset_pubs and dataset_pubs.data and external_dataset_pubs and external_dataset_pubs.data:
@@ -176,7 +152,6 @@ class AGDR(Schema):
 
         # TODO: indigenous_governance
         # TODO: iwi
-        # (skip for now, improvement for later)
 
         node = "genomics_assay"
         self._nodes[node] = AGDRNode(node, raw_metadata["file"], g3schema.nodes[node], project=self.project_code, program=self.program_name, outputfile=self.report_output)
@@ -204,69 +179,5 @@ class AGDR(Schema):
             return self._nodes[name]
         raise AgdrNotFoundException(f"node {name} not found in AGDR schema")
 
-    #def _lookupNode(self, node_name):
-    #    # list of nodes:
-    #    # ---------------------------
-    #    # project
-    #    # aligned_reads_index
-    #    # publication
-    #    # supplementary_file
-    #    # iwi
-    #    # contributor
-    #    # core_metadata_collection
-    #    # genome
-    #    # metagenome
-    #    # experiment
-    #    # indigenous_governance
-    #    # sample
-    #    # processed_file
-    #    # raw
-    #    # genomics_assay
-    #    # external_dataset
-    #    #
-    #    # most of the names match, except:
-    #    # file 
-    #    #   -> raw
-    #    #   -> processed_file
-    #    #   -> supplementary_file
-    #    #   -> aligned_reads_index
-    #    # instrument
-    #    #   -> genomics_assay
-    #    pass
-
-    #def _extractRow(self, row: SpreadsheetRow):
-    #    # for each cell in the row, create a new AGDRProperty
-    #    # creating an AGDRProperty will also create a Gen3Property object
-    #    # for each cell in the row
-    #    #   create a new AGDRProperty
-    #    #   create a new Gen3Property
-    #    #   add the AGDRProperty to the AGDRNode
-    #    #   add the Gen3Property to the Gen3Node
-    #    pass
-
-    #def _joinProject(self, project_metadata: SpreadsheetNode) -> AGDRNode:
-    #    node_name = project_metadata.name
-    #    gen3_name = "project"
-    #    #node = AGDRNode(node_name, gen3_name, self._gen3_dictionary.getNode("project"))
-    #    pass
-
-    #def _joinMetadata(self, raw_metadata: Dict[str, AGDRNode]):
-    #    # for each node in the raw metadata, create a new AGDRNode
-    #    # creating an AGDRNode will also create AGDRProperty objects
-
-    #    #for node_name in raw_metadata:
-    #    #    node = raw_metadata[node_name]
-    #    #    gen3_node = self._gen3_dictionary.getNode(node_name)
-    #    #    if gen3_node is None:
-    #    #        logger.error(f"Node {node_name} not found in Gen3 dictionary")
-    #    #        raise AgdrImplementationException(f"Node {node_name} not found in Gen3 dictionary")
-    #    #    raw_metadata[node_name] = AGDRNode(node_name, gen3_node)
-
-    #    #raise AgdrNotImplementedException("Join metadata not yet implemented")
-    #    pass
-
     def getRootNode(self):
         return self._root
-
-    #def walk(self):
-    #    raise AgdrNotImplementedException("Walk not yet implemented")

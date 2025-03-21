@@ -26,7 +26,6 @@ empty_values = [
     "na",
     "nan"
 ]
-
 class AGDRTSVTransformer(TSVTransformer):
     def __init__(self, node):
         super().__init__(node)
@@ -53,11 +52,6 @@ class AGDRTSVTransformer(TSVTransformer):
 
     def _buildDataFromProps(self, node):
         pass
-
-    #def convert(self):
-    #    # convert self._node to tsv
-    #    # return tsv
-    #    pass
 
     def addRow(self, node):
         properties = node.data
@@ -104,8 +98,6 @@ class AGDRTSVTransformer(TSVTransformer):
 
         # order from root to leaves
         outputfile = os.path.join(outputdir, str(nodecount) + self.table_name + ".tsv")
-        #outputfile = os.path.join(outputdir, self.table_name + ".tsv")
-
 
         # strip out empty rows
         self._stripEmptyRows()
@@ -113,7 +105,4 @@ class AGDRTSVTransformer(TSVTransformer):
         with open (outputfile, 'w', encoding="utf-8") as f:
             f.write("\t".join(self.headers) + "\n")
             for row in self.data:
-                # TODO: this will remove newlines in project descriptions
-                # if an item's type is string, then put quotes around it
-                # (would be the fix here), just use typof()
                 f.write("\t".join([   " ".join(str(x).split("\n"))   for x in row]) + "\n")
