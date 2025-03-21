@@ -32,12 +32,19 @@ class AllDatasets:
         for dataset in self.datasets:
             if str(dataset["name"]).strip().lower() == str(dataset_name_in_experiment).strip().lower():
                 return dataset["value"]
-        else: 
+        else:
             print(f"In Experiments or Contributor, there is one or more dataset name {dataset_name_in_experiment} \n" 
                 f"that we cannot match to any dataset names in the project tab.\n "
                 f"Make sure that there is 1 row per entry. e.g if a contributor is connected to more than 1 dataset, please enter 2 rows, 1 for each dataset.\n ")
             sys.exit(1)
             return None  # Return None if no match is found
+        
+    def get_first(self):
+        if self.datasets:
+            return self.datasets[0]["value"]
+        else:
+            print(f"Have you defined datasets?\n ")
+            return None  # Return None if the list is empty
     
 logger = logger.setUp(__name__)
 all_datasets = AllDatasets()
@@ -566,7 +573,9 @@ class AGDR(SpreadsheetNode):
 
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
-                property = row.get("datatset_description")
+                property = row.get("dataset_description")
+                if property is None:
+                    property = row.get("datatset_description")
                 agdr_detailed_description = AGDRProperty(property, g3prop)
 
                 # investigator_affiliation
@@ -622,6 +631,7 @@ class AGDR(SpreadsheetNode):
 
                 properties = [
                     agdr_submitter_id,
+                    agdr_date_collected,
                     agdr_bioproject_accession,
                     agdr_biosample_accession,
                     agdr_contact,
@@ -632,7 +642,7 @@ class AGDR(SpreadsheetNode):
                     agdr_investigator_name,
                     agdr_name,
                     agdr_submitted_to_insdc,
-                    agdr_support_source,
+                    agdr_support_source
                 ]
                 properties_mandatory = [
                     agdr_detailed_description,
@@ -1148,9 +1158,10 @@ class AGDR(SpreadsheetNode):
                 # (not a requirement, a preference)
 
                 # similar to specimen_id
-                # sample_id confusing with the sample node but Claire is happy with that
                 g3prop = self.gen3node.getProperty("submitter_id")
-                property = row.get("sample_id")
+                property = row.get("metagenomic_id")
+                if property is None:
+                    property = row.get("sample_id") #old name in the spreadsheet
                 agdr_submitter_id = AGDRProperty(property, g3prop)
                 self._unique_id = property.data
 
@@ -1582,15 +1593,22 @@ class AGDR(SpreadsheetNode):
                 parent = ""
                 if is_external_dataset:
                     parent = "external_dataset.submitter_id"
-                    #g3prop = self.gen3node.getProperty("external_dataset.submitter_id")
+                    g3prop = self.gen3node.getProperty(parent)
+                    dataset = row.get("dataset_name")
+                    agdr_dataset_external = AGDRProperty(dataset, g3prop)
+                    agdr_dataset_external = self._generate_property("external_dataset.submitter_id", agdr_dataset_external.get_value(), g3prop)
+                    agdr_dataset_external.gen3_name = parent # override name
+                    agdr_dataset = self._generate_property("dataset.submitter_id", all_datasets.get_first(), g3prop)
+                    agdr_dataset.gen3_name = "dataset.submitter_id" 
                 else:
-                    #g3prop = self.gen3node.getProperty("dataset.submitter_id")
                     parent = "dataset.submitter_id"
-                g3prop = self.gen3node.getProperty(parent)
-                dataset = row.get("dataset_name")
-                agdr_dataset = AGDRProperty(dataset, g3prop)
-                agdr_dataset.gen3_name = parent # override name
-
+                    g3prop = self.gen3node.getProperty(parent)
+                    dataset = row.get("dataset_name")
+                    agdr_dataset = AGDRProperty(dataset, g3prop)
+                    agdr_dataset = self._generate_property(parent, all_datasets.get_value_by_name(agdr_dataset.get_value()), g3prop)
+                    agdr_dataset.gen3_name = parent # override name
+                    agdr_dataset_external = self._generate_property("external_dataset.submitter_id", 'nan', g3prop)
+                    agdr_dataset_external.gen3_name = "external_dataset.submitter_id"
                 # submitter_id
                 g3prop = self.gen3node.getProperty("submitter_id")
                 property = row.get("dataset_name")
@@ -1604,6 +1622,7 @@ class AGDR(SpreadsheetNode):
                     agdr_doi,
                     #agdr_citation_string # not in template
                     agdr_dataset,
+                    agdr_dataset_external,
                     agdr_submitter_id,
                     agdr_type
                 ]
@@ -1964,7 +1983,7 @@ class AGDR(SpreadsheetNode):
                 else: 
                     count += 1
                     continue
- 
+                
                 # md5sum
                 g3prop = self.gen3node.getProperty("md5sum")
                 property = row.get("md5sum")

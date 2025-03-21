@@ -6,6 +6,7 @@ Gen3 metadata dictionary analogue, from the 2025_01_24.json version
 of the AGDR dictionary.
 '''
 
+import numbers
 import re
 
 from agdrvalidator import *  # import AGDR exception types
@@ -44,7 +45,7 @@ class AGDR(SpreadsheetProperty):
                 self.required = property.required or rule.isRequired()
         self.gen3_name = None
         self.rule = rule # a Gen3 property
-        # TODO: investigate missing `rule` properties (None passed in frequently)
+
         if rule:
             #self.gen3_name = rule._input_name
             self.gen3_name = rule._name # output name
@@ -172,6 +173,7 @@ class AGDR(SpreadsheetProperty):
         """Validates if the property data is within allowed enum values."""
         allowed_values = self.rule._type.get('enum', [])
         if str(self.data).lower().strip() in (str(av).lower() for av in allowed_values):
+            self.data = str(self.data).lower().strip()
             return True, None
         return False, f"Value '{self.data}' is not in allowed values {allowed_values}"
 
@@ -217,7 +219,7 @@ class AGDR(SpreadsheetProperty):
         """Validates property data against multiple allowed types."""
         if self.data is None and 'null' in types:
             return True, None
-        if 'string' in types and isinstance(self.data, str):
+        if 'string' in types and (isinstance(self.data, str) or isinstance(self.data, numbers.Number)):
             return True, None
         if 'integer' in types:
             return self._is_integer_valid()

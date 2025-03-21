@@ -14,8 +14,6 @@ from agdrvalidator.utils import logger
 logger = logger.setUp(__name__)
 
 def getParentUniqueIdProperties(node_name):
-    # TODO: I may have misunderstood what UniqueId is -- maybe it's not the same as submitter_id value
-    #print(f"node_name: {node_name}")
     props = ["project_id"] # just some default
     if node_name == "publication":
         props = ["project_id"]
@@ -533,7 +531,7 @@ class AGDRValidator(Schema):
     def _report_complete(self):
         msg = ""
         if not self._validation_errors_detected:
-            msg = "\tNO ERRORS DETECTED"
+            msg = "\t DONE"
         if self._outputfile:
             with open(self._outputfile, "a", encoding="utf-8") as f:
                 f.write(f"{msg}\n")

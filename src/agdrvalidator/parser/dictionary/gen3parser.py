@@ -1,4 +1,3 @@
-#from enum import Enum
 import json
 
 from alive_progress import alive_bar
