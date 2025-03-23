@@ -92,7 +92,7 @@ class AGDRSpreadsheetValidator(object):
             "specimen_collect_device", "strain"
         ],
         "metagenome": [
-            "sample_id", "experiment_name", "secondary_identifier", "basis_of_record",
+            "metagenomic_id", "experiment_name", "secondary_identifier", "basis_of_record",
             "collection_date", "host", "environmental_medium", "habitat", "geo_loc_name",
             "latitude_decimal_degrees", "longitude_decimal_degrees",
             "coordinate_uncertainty_in_meters", "samp_collect_device", "collected_by",
