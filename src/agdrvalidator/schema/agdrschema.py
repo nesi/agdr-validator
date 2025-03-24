@@ -6,25 +6,6 @@ excel spreadsheet. It is compatible with the latest AGDR dictionary
 import datetime as dt
 from typing import Dict
 
-<<<<<<< HEAD:src/agdrvalidator/schema/agdrschema_2024_09_10.py
-from agdrvalidator.utils import logger
-import agdrvalidator.utils as utils
-from agdrvalidator.utils.helpers import *
-from agdrvalidator.schema.base import *
-from agdrvalidator.schema.node.agdrnode_2024_09_10 import AGDR as AGDRNode
-from agdrvalidator.schema.node.property.agdrproperty_2024_09_10 import AGDR as AGDRProperty
-from agdrvalidator.schema.node.property.gen3property import Gen3 as Gen3Property
-#from agdrvalidator.utils.tabular import * # Table()
-from agdrvalidator.utils.rich_tabular import * # Table()
-#from agdrvalidator.transformer.agdrtsv_2024_03_25 import AGDRTSVTransformer
-import datetime
-from agdrvalidator import * # import AGDR exception types
-
-from agdrvalidator.transformer.agdrtsv_2024_09_10 import AGDRTSVTransformer
-from agdrvalidator.schema.agdrspreadsheet_validator import AGDRSpreadsheetValidator
-
-=======
->>>>>>> AGDR-716:src/agdrvalidator/schema/agdrschema.py
 from alive_progress import alive_bar
 
 import agdrvalidator.utils as utils
@@ -46,10 +27,6 @@ logger = logger.setUp(__name__)
 
 class AGDR(Schema):
     def __init__(self, gen3_dictionary, spreadsheet_metadata: Dict[str, AGDRNode], report=None, project="AGDR99999", program="NZ"):
-<<<<<<< HEAD:src/agdrvalidator/schema/agdrschema_2024_09_10.py
-        #self._root = root
-=======
->>>>>>> AGDR-716:src/agdrvalidator/schema/agdrschema.py
         self._gen3_dictionary = gen3_dictionary
         self.project_code = project
         self.program_name = program
@@ -69,16 +46,7 @@ class AGDR(Schema):
 
         self.report_output = report
         if not report:
-<<<<<<< HEAD:src/agdrvalidator/schema/agdrschema_2024_09_10.py
-            self.report_output = f"{self.project_code}_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
-
-        self.spreadsheet_report_output = f"{self.project_code}_spreadsheet_validation_report_{datetime.datetime.now().strftime('%Y-%m-%d')}.txt"
-
-        # TODO: add spreadsheet validation report
-
-=======
             self.report_output = f"{self.project_code}_validation_report_{dt.datetime.now().strftime('%Y-%m-%d')}.txt"
->>>>>>> AGDR-716:src/agdrvalidator/schema/agdrschema.py
 
         self.spreadsheet_report_output = f"{self.project_code}_spreadsheet_validation_report_{dt.datetime.now().strftime('%Y-%m-%d')}.txt"
         

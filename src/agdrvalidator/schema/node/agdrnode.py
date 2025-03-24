@@ -329,12 +329,8 @@ class AGDR(SpreadsheetNode):
                 g3_property = self.gen3node.getProperty("detailed_description")
                 property = row.get("project_description")
                 agdr_description = AGDRProperty(property, g3_property)
-<<<<<<< HEAD:src/agdrvalidator/schema/node/agdrnode_2024_09_10.py
-
-=======
                 self.messagestodisplay = self.add_missing_field_message(agdr_description, property, self.messagestodisplay, sheet_name, "project")
                 
->>>>>>> AGDR-716:src/agdrvalidator/schema/node/agdrnode.py
                 g3_property = self.gen3node.getProperty("name")
                 property = row.get("name")
                 agdr_name = AGDRProperty(property, g3_property)
@@ -405,11 +401,8 @@ class AGDR(SpreadsheetNode):
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
                 property = row.get("dataset_description")
-<<<<<<< HEAD:src/agdrvalidator/schema/node/agdrnode_2024_09_10.py
-=======
                 if property is None:
                     property = row.get("datatset_description") #spelling mistake in the template we had at one point - need to remove in the future
->>>>>>> AGDR-716:src/agdrvalidator/schema/node/agdrnode.py
                 agdr_detailed_description = AGDRProperty(property, g3prop)
                 self.messagestodisplay = self.add_missing_field_message(agdr_detailed_description, property, self.messagestodisplay, sheet_name, "dataset")
 
@@ -518,11 +511,8 @@ class AGDR(SpreadsheetNode):
                 # detailed_description
                 g3prop = self.gen3node.getProperty("detailed_description")
                 property = row.get("dataset_description")
-<<<<<<< HEAD:src/agdrvalidator/schema/node/agdrnode_2024_09_10.py
-=======
                 if property is None:
                     property = row.get("datatset_description")
->>>>>>> AGDR-716:src/agdrvalidator/schema/node/agdrnode.py
                 agdr_detailed_description = AGDRProperty(property, g3prop)
 
                 # investigator_affiliation
@@ -840,10 +830,7 @@ class AGDR(SpreadsheetNode):
                 property = row.get("** age")
                 agdr_age = AGDRProperty(property, g3prop)
 
-<<<<<<< HEAD:src/agdrvalidator/schema/node/agdrnode_2024_09_10.py
-=======
                 # ** age_unit
->>>>>>> AGDR-716:src/agdrvalidator/schema/node/agdrnode.py
                 g3prop = self.gen3node.getProperty("age_unit")
                 property = row.get("age_unit")
                 agdr_age_unit = AGDRProperty(property, g3prop)
