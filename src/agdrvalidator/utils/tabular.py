@@ -1,5 +1,4 @@
 '''
-@Author Eirian Perkins 
 Simple data container for excel metadata, used for the 
 original version of the agdrvalidator 
 

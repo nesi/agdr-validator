@@ -1,10 +1,14 @@
 '''
+<<<<<<< HEAD
 @Author Eirian Perkins
 
+=======
+>>>>>>> AGDR-716
 this file contains logic for validating the spreadsheet format,
 i.e. did the user remove fields that are expected?
 '''
 
+<<<<<<< HEAD
 from agdrvalidator.utils import logger
 from agdrvalidator.utils.rich_tabular import SpreadsheetRow, SpreadsheetNode, SpreadsheetProperty, CellLocation
 #from agdrvalidator.schema.node.property.gen3property import *
@@ -16,6 +20,18 @@ from agdrvalidator import * # import AGDR exception types
 
 from alive_progress import alive_bar
 
+=======
+from alive_progress import alive_bar
+
+from agdrvalidator import *  # import AGDR exception types
+from agdrvalidator.schema.node.agdrnode import AGDR as AGDRNode
+from agdrvalidator.schema.node.property.agdrproperty import \
+    AGDR as AGDRProperty
+from agdrvalidator.utils import logger
+from agdrvalidator.utils.rich_tabular import (CellLocation, SpreadsheetNode,
+                                              SpreadsheetProperty,
+                                              SpreadsheetRow)
+>>>>>>> AGDR-716
 
 logger = logger.setUp(__name__)
 
@@ -62,9 +78,15 @@ class AGDRSpreadsheetValidator(object):
         ],
         "supplementary_file": [
             "md5sum", "file_size", "file_name", "data_type", "data_format",
+<<<<<<< HEAD
             "data_category", "sample_id", "file_name"
         ],
         "raw_read_file": [
+=======
+            "experiment_name"
+        ],
+        "raw": [
+>>>>>>> AGDR-716
             "md5sum", "file_size", "file_name", "data_type", "data_format",
             "data_category", "sample_id", "file_name", "read_pair_number"
         ],
@@ -72,6 +94,10 @@ class AGDRSpreadsheetValidator(object):
             "md5sum", "file_size", "file_name", "data_type", "data_format",
             "data_category", "sample_id", "file_name", "experimental_strategy"
         ],
+<<<<<<< HEAD
+=======
+        #aligned reads to add
+>>>>>>> AGDR-716
         "sample": [
             "sample_id", "genomic_specimen_ID or metagenomic_sample_ID", "secondary_identifier",
             "specimen_voucher", "sample_title", "environmental_medium", "collection_date",
@@ -94,7 +120,11 @@ class AGDRSpreadsheetValidator(object):
             "specimen_collect_device", "strain"
         ],
         "metagenome": [
+<<<<<<< HEAD
             "sample_id", "experiment_name", "secondary_identifier", "basis_of_record",
+=======
+            "metagenomic_id", "experiment_name", "secondary_identifier", "basis_of_record",
+>>>>>>> AGDR-716
             "collection_date", "host", "environmental_medium", "habitat", "geo_loc_name",
             "latitude_decimal_degrees", "longitude_decimal_degrees",
             "coordinate_uncertainty_in_meters", "samp_collect_device", "collected_by",
@@ -120,6 +150,7 @@ class AGDRSpreadsheetValidator(object):
             return
 
         first_row = node.data
+<<<<<<< HEAD
         #print(f"first_row: {first_row}")
         actual_headers = {prop.name for prop in first_row}  # Extract header names
         sheet_name = node.sheet_name  # Get sheet name
@@ -129,12 +160,23 @@ class AGDRSpreadsheetValidator(object):
         #print(f"required_columns: {required_columns}")
         #print(f"missing_headers: {missing_headers}")
         #print()
+=======
+        #print(f'1 {first_row}')
+        actual_headers = {prop.name.lower() for prop in first_row}  # Extract header names
+        #print(f'2 {actual_headers}')
+        sheet_name = node.sheet_name  # Get sheet name
+        #print(f'3 {sheet_name}')
+
+        required_columns = self.EXPECTED_COLUMNS.get(node_type, [])
+        missing_headers = [col for col in required_columns if col.lower() not in actual_headers]
+>>>>>>> AGDR-716
 
         if missing_headers:
             self.validation_errors.append(
                 f"Missing required headers in sheet '{sheet_name}' for {node_type} node: {', '.join(missing_headers)}"
             )
 
+<<<<<<< HEAD
         # Special case: File nodes have additional conditional checks
         if node_type in ["raw_read_file", "processed_file"]:
             data_category_column = "data_category"
@@ -206,6 +248,8 @@ class AGDRSpreadsheetValidator(object):
         return False
     
 
+=======
+>>>>>>> AGDR-716
     def add(self, node_name, header):
         self.headers[node_name] = header
 
@@ -213,15 +257,25 @@ class AGDRSpreadsheetValidator(object):
         ordered_keys = [
             "project", "dataset", "external_dataset", "contributors", "experiment",
             "genomics_assay", "sample", "genome", "metagenome", "supplementary_file",
+<<<<<<< HEAD
             "raw_read_file", "processed_file"
+=======
+            "raw", "processed_file"
+>>>>>>> AGDR-716
         ]
 
         # as of Python 3.8+, dictionaries maintain insertion order
         # the ordered_keys is just here to make the intent explicit
+<<<<<<< HEAD
         # however the implementation in agdrschema_2024_09_10.py will
         # guarantee the order of the nodes
 
         with alive_bar(len(self.headers), title="\tValidating SPREADSHEET  ") as bar:
+=======
+
+        with alive_bar(len(self.headers), title="\tValidating SPREADSHEET  ") as bar:
+            #print(f"HEADERS  {self.headers}")
+>>>>>>> AGDR-716
             for key in ordered_keys:
                 if key in self.headers:
                     self._validate_node(self.headers[key], key)
@@ -242,4 +296,8 @@ class AGDRSpreadsheetValidator(object):
                 for error in self.validation_errors:
                     print(f"  - {error}")
 
+<<<<<<< HEAD
         return False
+=======
+        return False
+>>>>>>> AGDR-716

@@ -1,14 +1,12 @@
 '''
-@Author: Eirian Perkins
-
 This file provides a concrete implementation of a Schema, which is 
 composed of Nodes. The Gen3 Schema implementation should be able to
 parse an arbitrary Gen3 dictionary structure and should not need to 
 be updated for specific versions of a metadata structure apart from 
 resolving any bugs identified.
 '''
-from agdrvalidator.utils import logger
 from agdrvalidator.schema.base import *
+from agdrvalidator.utils import logger
 
 logger = logger.setUp(__name__)
 
@@ -35,7 +33,6 @@ class Gen3(Schema):
     def setTerms(self, terms):
         self._terms = terms
 
-    
     def getUploadOrder(self):
         '''
         Determine upload order required for Gen3 so that metadata nodes 

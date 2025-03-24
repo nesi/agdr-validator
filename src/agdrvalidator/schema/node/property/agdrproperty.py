@@ -1,18 +1,17 @@
 '''
-@Author Eirian Perkins
-
 this file contains data container classes used to represent 
 metadata from excel workbook input, together with its 
-Gen3 metadata dictionary analogue, from the 2024_09_10.json version 
+Gen3 metadata dictionary analogue, from the 2025_01_24.json version 
 of the AGDR dictionary.
 '''
 
-from agdrvalidator.utils.rich_tabular import CellLocation, SpreadsheetProperty
-from agdrvalidator.schema.node.property.gen3property import *
-from agdrvalidator import * # import AGDR exception types
-
+import numbers
 import re
+
+from agdrvalidator import *  # import AGDR exception types
+from agdrvalidator.schema.node.property.gen3property import *
 from agdrvalidator.utils import is_nan
+from agdrvalidator.utils.rich_tabular import CellLocation, SpreadsheetProperty
 
 
 class AGDR(SpreadsheetProperty):
@@ -26,9 +25,6 @@ class AGDR(SpreadsheetProperty):
 
     @classmethod
     def convertName(_, name):
-        # this should already have been done by AGDRNode objects
-        # name is what's in the spreadsheet 
-        # gen3_name is what's in the Gen3 dictionary
         raise AgdrNotImplementedException("I don't know how to convert names yet") 
 
     def __init__(self, property:SpreadsheetProperty, rule:Gen3):
@@ -45,9 +41,8 @@ class AGDR(SpreadsheetProperty):
                 self.required = property.required or rule.isRequired()
         self.gen3_name = None
         self.rule = rule # a Gen3 property
-        # TODO: investigate missing `rule` properties (None passed in frequently)
+
         if rule:
-            #self.gen3_name = rule._input_name
             self.gen3_name = rule._name # output name
             self.required = rule.isRequired()
             if property:
@@ -58,12 +53,9 @@ class AGDR(SpreadsheetProperty):
 
     def __repr__(self):
         return f"AGDRProperty(name={self.gen3_name}, gen3name={self.gen3_name}, value={self.data}, cell_location=CellLocation({self.location}), required={self.required}, gen3property={self.rule})"
-        #return f"AGDRProperty(name={self.name}, value={self.data}, cell_location=CellLocation({self.location}), required={self.required})"
-
-
+ 
     def get_value(self):
         return self.data
-
 
     def validate(self):
         """Validates the property data based on the Gen3 rule."""
@@ -120,8 +112,7 @@ class AGDR(SpreadsheetProperty):
         if self.data is None or is_nan(self.data):
             self.data = ""  # Set to an empty string if None or NaN
         else:
-            self.data = str(self.data)  # Ensure the value is treated as a string
-        
+            self.data = str(self.data)  # Ensure the value is treated as a string        
         # Since pattern application is handled separately, any string is valid here
         return True, None
 
@@ -149,8 +140,6 @@ class AGDR(SpreadsheetProperty):
         environmental_medium
         '''
 
-        # some dictionary parsing is wrong, here are some hacks to
-        # make it work in the mean time
         if self.gen3_name in actually_integers:
             return self._is_integer_valid()
 
@@ -163,17 +152,20 @@ class AGDR(SpreadsheetProperty):
 
         if not self.rule._pattern:
             return True, None
+        pattern = self.rule._pattern
+        self.rule._pattern = r'{}'.format(pattern)
         if re.fullmatch(self.rule._pattern, str(self.data)):
             return True, None
         else:
-            #return False, f"Value '{self.data}' does not match pattern '{self.rule._pattern}'"
             return False, f"Value {self.name}; {self.gen3_name} '{self.data}' does not match pattern '{self.rule._pattern}'"
 
     def _is_enum_valid(self):
         """Validates if the property data is within allowed enum values."""
         allowed_values = self.rule._type.get('enum', [])
-        if str(self.data).lower() in (str(av).lower() for av in allowed_values):
-            return True, None
+        for av in allowed_values:
+            if str(self.data).lower().strip() == str(av).lower():
+                self.data = str(av)  # Set self.data to the correctly formatted value
+                return True, None
         return False, f"Value '{self.data}' is not in allowed values {allowed_values}"
 
     def _is_boolean_valid(self):
@@ -218,7 +210,7 @@ class AGDR(SpreadsheetProperty):
         """Validates property data against multiple allowed types."""
         if self.data is None and 'null' in types:
             return True, None
-        if 'string' in types and isinstance(self.data, str):
+        if 'string' in types and (isinstance(self.data, str) or isinstance(self.data, numbers.Number)):
             return True, None
         if 'integer' in types:
             return self._is_integer_valid()

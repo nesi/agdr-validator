@@ -1,6 +1,4 @@
 '''
-@Author Eirian Perkins
-
 this file contains data container classes used to represent 
 metadata from excel workbook input.
 '''
@@ -21,7 +19,6 @@ class CellLocation(object):
 
     def __str__(self):
         if self.row is None or self.column is None:
-            # generated value, not in spreadsheet
             return "N/A"
         col_letter = get_column_letter(self.column)
         return f"{col_letter}{self.row}"
@@ -30,7 +27,6 @@ class CellLocation(object):
         return self.__str__()
 
     def __bool__(self):
-        # CellLocation is "truthy" if both row and column are not None
         return self.row is not None and self.column is not None
 
 class SpreadsheetProperty(object):
@@ -67,7 +63,6 @@ class SpreadsheetRow(object):
         return self.data[index]
 
     def __str__(self):
-        #return f"{self.data}"
         return f"SpreadsheetRow(data={self.data})"
 
     def __repr__(self):
@@ -77,20 +72,12 @@ class SpreadsheetRow(object):
         # iterate over properties
         return iter(self.data)
 
-    #def __len__(self):
-    #    return len(self.data)
-
     def get(self, key):
-        #from . import logger
-        #logger = logger.setUp(__name__)
         # retrieve a property
         for prop in self.data:
-            if key.lower() == prop.name.lower():
+            if key.lower() == str(prop.name).lower():
                 return prop
-        #logger.error(f"Property {key} not found in row")
-        # there is some error in parsing with blank columns
         return None
-
 class SpreadsheetNode(object):
     '''
     This class represents all rows of data for a particular 
@@ -106,8 +93,7 @@ class SpreadsheetNode(object):
         if not self.data:
             return f"SpreadsheetNode(name={self.name}, data=[])"
         rows_str = "\n\t".join([str(row) for row in self.data])
-        return f"SpreadsheetNode(name={self.name}, data=[\n\t{rows_str}\n])"
-        #return f"{self.name}:\tdata={self.data})"
+        return f"SpreadsheetNode(name={self.name}, data=[\n\t{rows_str}\n])" 
 
     def __repr__(self):
         return self.__str__()

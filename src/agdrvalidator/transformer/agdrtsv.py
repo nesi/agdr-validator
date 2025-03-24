@@ -1,16 +1,14 @@
 '''
-@Author: Eirian Perkins
-
 This file is a subclass of TSVTransformer, and is intended to convert
-metadata from a spreadsheet aligned with the 2022-09-23 version of the
-AGDR schema into a collection of TSV files, which can be then used 
+metadata from a spreadsheet aligned with the version of the
+AGDR schema as specified in the file name into a collection of TSV files, which can be then used 
 for metadata ingestion into a Gen3 data commons.
 '''
-from agdrvalidator.transformer.tsv import TSVTransformer
-from agdrvalidator.utils import logger
-
 import datetime
 import os
+
+from agdrvalidator.transformer.tsv import TSVTransformer
+from agdrvalidator.utils import logger
 
 logger = logger.setUp(__name__)
 
@@ -28,13 +26,12 @@ empty_values = [
     "na",
     "nan"
 ]
-
 class AGDRTSVTransformer(TSVTransformer):
     def __init__(self, node):
         super().__init__(node)
 
         # extract node type
-        self.table_name = node._output_name
+        self.table_name = node.gen3_name
         # extract header from node
         self.headers = self._buildHeaderFromProps(node)
         # extract data from node
@@ -42,33 +39,33 @@ class AGDRTSVTransformer(TSVTransformer):
         self.data = []
 
     def _buildHeaderFromProps(self, node):
-        headers = []
-        for property in node.getProperties():
-            col_name = property._output_name
-            if property.is_required():
+        headers = set()
+        for property in node:
+            #if node.gen3_name == "project":
+            #    print(f"iterating over property {property.name} : {property.gen3_name}")
+            if not property.gen3_name:
+                #print(f"property {property.name} has no gen3_name")
+                continue
+            col_name = property.gen3_name
+            if property.required:
                 col_name = "*" + col_name
-            headers.append(col_name)
-        logger.debug(f"{node._output_name} headers: {headers}")
-        return headers
+            headers.add(col_name)
+        logger.info(f"{node.gen3_name} headers: {list(headers)}")
+        return list(headers)
 
     def _buildDataFromProps(self, node):
         pass
 
-    #def convert(self):
-    #    # convert self._node to tsv
-    #    # return tsv
-    #    pass
-
     def addRow(self, node):
-        properties = node.getProperties()
+        properties = node.data
         row_data = []
         for header in self.headers:
             column = header.strip("*")
             #if column == "type":
             #    continue
             property = node.getProperty(column)
-            if property and property._value:
-                row_data.append(property._value)
+            if property and property.get_value() not in empty_values:
+                row_data.append(property.get_value())
             else:
                 row_data.append("")
         self.data.append(row_data)
@@ -104,8 +101,6 @@ class AGDRTSVTransformer(TSVTransformer):
 
         # order from root to leaves
         outputfile = os.path.join(outputdir, str(nodecount) + self.table_name + ".tsv")
-        #outputfile = os.path.join(outputdir, self.table_name + ".tsv")
-
 
         # strip out empty rows
         self._stripEmptyRows()
@@ -113,24 +108,4 @@ class AGDRTSVTransformer(TSVTransformer):
         with open (outputfile, 'w', encoding="utf-8") as f:
             f.write("\t".join(self.headers) + "\n")
             for row in self.data:
-                # TODO: this will remove newlines in project descriptions
-                # if an item's type is string, then put quotes around it
-                # (would be the fix here), just use typof()
                 f.write("\t".join([   " ".join(str(x).split("\n"))   for x in row]) + "\n")
-
-        # some things that need to be handled but haven't yet:
-        #   - associated_project or associated_foo: need to adjust output names
-        #     to foo.submitter_id
-        #   - placeholder nodes must be created, e.g. aliquot
-        #   - there are "hidden" nodes in the spreadsheet, some fields 
-        #     are collected from researchers in a different node than
-        #     in the data dictionary
-        #   - processed and raw files: need to add project_id to properties
-        #   - Experiment table doesn't need associated_experiment
-        #     it should have project added, in fact, all tables should be reviewed for it
-        #
-        # parsing:
-        #   - required properties not getting added properly
-        #   - save line number of node in spreadsheet
-        #     can use pd.read_excel(index_col="str"), and save that off
-        #   - https://pandas.pydata.org/docs/reference/api/pandas.read_excel.html

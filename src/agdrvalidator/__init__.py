@@ -1,6 +1,4 @@
 '''
-@Author: Eirian Perkins
-
 This file provides some basic Exceptions for the agdrvalidator package.
 '''
 class AgdrFormatException(Exception):
@@ -12,7 +10,7 @@ class AgdrImplementationException(Exception):
 class AgdrNotFoundException(Exception):
     pass
 
-class BadMetadataSpreadhsheetException(Exception):
+class BadMetadataSpreadsheetException(Exception):
     pass
 
 class AgdrNotImplementedException(Exception):

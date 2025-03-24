@@ -1,6 +1,4 @@
 '''
-@Author: Eirian Perkins
-
 This file provides the version of the package, in the format:
     major.minor.spreadsheetVersion.agdrDictionaryVersion
 '''
@@ -8,5 +6,5 @@ This file provides the version of the package, in the format:
 def version(spreadsheet=None):
     if not spreadsheet:
         spreadsheet = "unknown"
-    nesi_version = f"1.2.{spreadsheet}.2024_09_10"
+    nesi_version = f"1.3.{spreadsheet}.2025_01_24"
     return nesi_version

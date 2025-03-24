@@ -1,4 +1,5 @@
-import pandas as pd 
+import pandas as pd
+
 
 def chomp(arr):
     x = -1
@@ -12,7 +13,6 @@ def chomp(arr):
     else:
         return arr[:x+1]
 
-
 def chomp_front(arr):
     x = 0
     for i in range(len(arr)):
@@ -24,5 +24,3 @@ def chomp_front(arr):
         return arr
     else:
         return arr[x:]
-
-

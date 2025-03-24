@@ -37,15 +37,19 @@ Note: to deactivate the env, just type `source deactivate`
 example1: 
 
 `agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v -p 99999`
+`agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v -p 99999`
 
 - the `-v` option is required in order to perform validation, or else validation is skipped
   - using `-vv` will increase **validation** verbosity. By default, only errors are displayed. `-vv` will also display warnings and informational messages, for instance if optional links between nodes are not set.
   - the report will be written to a file based on the project code and the current date. Use the `--stdout` flag to display the validation report in the terminal instead.
 - output will be appended to `99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created, and `99999` being the project code specified by the `-p` flag. This should always be specified when doing TSV generation as it specifies the project the metadata is associated with.
+- output will be appended to `99999_validation_report_YYYY-MM-DD.txt` by default with YYYY-MM-DD being the date when the output was created, and `99999` being the project code specified by the `-p` flag. This should always be specified when doing TSV generation as it specifies the project the metadata is associated with.
 - flags may be specified in any order
 - the version of the validator in the format MAJOR.MINOR.SPREADSHEET.DICTIONARY will always be displayed. Any issue with the validator, please report the version number. If `--version` is specified, the validator will display the version number and exit.
 
 example2: 
+`agdrvalidator -t -p 00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v`
+- as well as being validated, TSV files will be created for the program NZ and project 00051
 `agdrvalidator -t -p 00051 -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v`
 - as well as being validated, TSV files will be created for the program NZ and project 00051
 
@@ -62,7 +66,9 @@ options:
   -o, --stdout          write validation report to stdout, otherwise a filename will be generated based on the project code and date of report generation
   -p PROJECT, --project PROJECT
                         Project code, e.g. XXXXX, required for TSV output. If unspecified, project code will default to 99999.
+                        Project code, e.g. XXXXX, required for TSV output. If unspecified, project code will default to 99999.
   -r PROGRAM, --program PROGRAM
+                        Program name, required for TSV output. If unspecified, program name will default to NZ
                         Program name, required for TSV output. If unspecified, program name will default to NZ
   -t, --tsv             include this flag to convert spreadsheet to TSV output for Gen3 ingest
   -l LOGLEVEL, --loglevel LOGLEVEL
@@ -81,7 +87,7 @@ with M the Major version, m the minor version and dictv the version of the dicti
 Happy path, no errors in the spreadsheet (note that `-o` pipes the validation 
 report to stdout):
 ```
-(venv) eirian> agdrvalidator -s TestValues2.xlsx -v -o
+(venv) > agdrvalidator -s TestValues2.xlsx -v -o
 VALIDATOR VERSION: 		1.2.20220923
 
 	Parsing AGDR spreadsheet |███| 3 in 0.1s (17.15/s)
@@ -100,7 +106,7 @@ Sad path, error discovered (duplicate `submitter_id` in Environmental field from
 which is why the error message refers to `metagenome`, `sample`, and `aliquot` nodes even though the 
 spreadsheet error is in the `Environmental` field. 
 ```
-(venv) eirian> cat AGDR99999_Validation_Report_2024-03-28.txt
+(venv) > cat 99999_Validation_Report_2024-03-28.txt
 METAGENOME
 	ERROR: duplicate submitter_id found for metagenome node: CPc
 	ERROR: duplicate submitter_id found for metagenome node: CPc
@@ -173,3 +179,5 @@ The AGDR validator is dependent on 2 major components
         The table is finished by an empty row.  
         Note: another table may be started just below, it is important to keep the rows intact in case of deletion of cells.  
 
+
+Thank you to Eirian Perkins to have created the first version which this validator is based on. 

@@ -1,13 +1,12 @@
-from agdrvalidator.utils import logger 
+import json
+
+from alive_progress import alive_bar
+
 from agdrvalidator import AgdrFormatException
 from agdrvalidator.parser import *
 from agdrvalidator.schema import gen3schema as schema
 from agdrvalidator.schema.node import gen3node as node
-
-#from enum import Enum
-import json
-
-from alive_progress import alive_bar
+from agdrvalidator.utils import logger
 
 logger = logger.setUp(__name__)
 
@@ -69,7 +68,6 @@ class Gen3(Parser):
         root = node.Gen3(root, root["id"])
         self._schema.setRoot(root)
         return root
-
 
     def parse(self):
         root = self._extractRoot()
