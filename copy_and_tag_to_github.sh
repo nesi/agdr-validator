@@ -18,7 +18,7 @@ git config --global user.name "natnesi"
 git remote add github $GITHUB_REPO_URL
 
 # Push the specified tag to the GitHub repository
-git push github main
+git push github main --force
 
 # Tag the latest commit on GitHub with the specified tag
 git tag -a "$TAG" -m "Tagging commit with $TAG"

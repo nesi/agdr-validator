@@ -34,9 +34,12 @@ Note: to deactivate the env, just type `source deactivate`
 `pip install -e .`
 
 ### Run validator on input spreadsheet
+To run with the example spreadsheet  
+`agdrvalidator -s files/agdrexample_2025_03_20.xlsx -v -p 00001 -t`
+
+
 example1: 
 
-`agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v -p 99999`
 `agdrvalidator -s test/data/AGDR_Metadata_Venenivibrio.xlsx -v -p 99999`
 
 - the `-v` option is required in order to perform validation, or else validation is skipped
