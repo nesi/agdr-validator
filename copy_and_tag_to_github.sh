@@ -17,11 +17,8 @@ git config --global user.name "natnesi"
 # Add the GitHub repository as a remote
 git remote add github $GITHUB_REPO_URL
 
-# Fetch the tags from the GitLab repository
-git fetch origin --tags
-
 # Push the specified tag to the GitHub repository
-git push github $TAG:refs/heads/main
+git push github main
 
 # Tag the latest commit on GitHub with the specified tag
 git tag -a "$TAG" -m "Tagging commit with $TAG"
