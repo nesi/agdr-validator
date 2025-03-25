@@ -1,0 +1,128 @@
+Introduction
+============
+
+The Aotearoa Genomics Data Repository (AGDR) [https://docs.agdr.org.nz/](https://docs.agdr.org.nz/) manages metadata as described by a regularly updated dictionary [https://data.agdr.org.nz/DD](https://data.agdr.org.nz/DD) . This dictionary ensures that all crucial information enabling reuse of genomic data is captured alongside the data. It consists of various nodes, each with mandatory and optional properties, collectively forming the metadata.
+
+The metadata enables users to search for samples necessary for their research and provides essential information about these samples.
+
+Researchers, upon approval, can submit genomic data generated from biological and environmental samples, along with their associated metadata, to the AGDR team. This metadata will be uploaded to the website and can be searched on the projects page [https://data.agdr.org.nz/discovery](https://data.agdr.org.nz/discovery) or the exploration page [https://data.agdr.org.nz/explorer](https://data.agdr.org.nz/explorer).
+
+NeSI provides a Google Sheets template, compatible with Microsoft Excel, for filling in the metadata, which is then uploaded to AGDR. You can request a copy of the template by contacting [gasupport@nesi.org.nz](mailto:gasupport@nesi.org.nz). The spreadsheet is a simplified version of the dictionary to facilitate researchers' work.
+
+NeSI also offers a tool called the AGDR Validator, which checks the correctness of the metadata, consistency between nodes, and field formats. We highly recommend using this tool to identify and correct any issues in the spreadsheet before submitting it to NeSI for upload. This will streamline the process and reduce the need for follow-up questions.
+
+This document explains how to use the AGDR Validator and what to do with the output files.
+
+How to use the AGDR Validator
+=============================
+
+The AGDR Validator is available for download from the AGDR documentation [https://docs.agdr.org.nz/](https://docs.agdr.org.nz/). It is an executable file.
+
+1.  **Download the AGDR Validator** to your device.
+    
+2.  **Open a terminal** (or PowerShell if you are using Windows) and navigate to the folder where the AGDR Validator executable is saved.
+    
+3.  **Run the following command:**
+    
+
+agdrvalidator -s AGDRMetadataToValidate.xlsx -v
+
+*   The \-s option allows you to specify the name of the file to validate. This file should be based on the AGDR Metadata template, with no changes to its format—only properties and necessary rows should be added (no new columns, please).
+    
+*   The \-v option is required to perform the validation.
+    
+
+Note: Flags can be specified in any order.
+
+The AGDR Validator has additional functionality described in the help section, but these are not necessary for the researcher to perform.
+
+`$ agdrvalidator --help  
+
+usage: agdrvalidator \[-h\] -s SPREADSHEET \[-o\] \[-p PROJECT\] \[-r PROGRAM\] \[-t\] \[-l LOGLEVEL\] \[-v\] \[--version\]
+
+Generate validation report for AGDR metadata spreadsheet and/or TSV files for metadata ingest
+
+options: 
+
+-h, --help show this help message and exit 
+
+-s SPREADSHEET, --spreadsheet SPREADSHEET path to excel input file containing metadata 
+
+-o, --stdout write validation report to stdout, otherwise a filename will be generated based on the project code and date of report generation 
+
+-p PROJECT, --project PROJECT Project code, e.g. XXXXX, required for TSV output. If unspecified, project code will default to AGDR99999. 
+
+-r PROGRAM, --program PROGRAM Program name, required for TSV output. If unspecified, program name will default to NZ
+-t, --tsv include this flag to convert spreadsheet to TSV output for Gen3 ingest 
+
+-l LOGLEVEL, --loglevel LOGLEVEL verbosity level, for debugging. Default is 0, highest is 3 
+
+-v, --validate validate the input file. -v will generate a report with all detected errors; -vv will generate a report with all detected errors and warnings. Default is 0. 
+
+--version show program's version number and exit`
+
+
+
+How to read the outputs
+=======================
+
+The first feedback displayed on the terminal will be the version of the validator in the format MAJOR.MINOR.SPREADSHEET.DICTIONARY. If you encounter any issues with the validator, please report this version number.
+
+If the AGDR Validator successfully decodes the entered spreadsheet, a text file will be generated containing any issues found. The filename will be in the format AGDR99999\_validation\_report\_YYYY-MM-DD.txt, where YYYY-MM-DD represents the date the output was created.
+
+If there is no issues, the file will contain the following message:
+
+`DONE`
+
+The spreadsheet is ready to be sent to the AGDR team for upload.
+
+Below is non-exhaustive list of possible errors that need to be fixed:
+
+*   Connection between nodes is not possible
+    
+
+`EXPERIMENT   
+ERROR:no REQUIRED link found connecting parent \[dataset\] link to child \[experiment:experiment\_name\]`
+
+The experiment section needs to refer to one of the datasets as listed in the project tab of the spreadsheet in the Datasets section.
+
+*   Incorrect format
+    
+
+`metagenome \[IMP.15\_MG\]  
+       samp\_sizeExpected a numeric value, but received \[2000 mL\] instead`
+
+Certain properties have very specific format expected as the samp\_size which needs to be a number. Modify the value in metagenome IMP.15\_MG.
+
+*   Missing mandatory property
+    
+
+`genome \[KS1429\_1\]   
+         Required field '\*\* age' is missing at sheet \[experiments\_genomic\] - \[Q20\]`
+
+It is expected that cell Q20 of the spreadsheet for genome KS1429\_1 must be filled.
+
+*   Submitter id already existing
+    
+
+`EXPERIMENT   
+   ERROR: duplicate submitter\_id found for experiment node: experiment1`
+
+Ensure that all unique identifier (as the dataset names, the experiment names, samples names, etc) are unique across the spreadsheet. Note: This does not check for duplicated names already loaded into the project, but we recommend verifying uniqueness with the metadata already loaded. Contact [gasupport@nesi.org.nz](mailto:gasupport@nesi.org.nz) for more information.
+
+*   Value is not the expected one
+    
+
+`genome \[68158\]   
+Value 'Living Specimen' is not in allowed values \['PreservedSpecimen', 'FossilSpecimen', 'LivingSpecimen', 'MaterialSample', 'HumanObservation', 'MachineObservation', 'Occurrence', 'MaterialCitation', 'Unknown'\] at sheet \[experiments\_genomic\] - \[J17\]`
+
+Modify the value in cellJ17for the genome 68158 in the spreadsheet to one of the permitted values.
+
+Notes and warnings
+==================
+
+If you open the template filled in or any of the tsv files created by the validator into Microsoft Excel or other editors, be aware that the values of certain columns may be modified and not compatible with the AGDR ingest tool.
+
+*   Special characters (e.g. Maori words containing macrons) may not be rendered properly in certain editors. When you are providing the template filled in and checked back to the AGDR team, make sure that the special characters are properly displayed.
+    
+*   False/True - AGDR wants all boolean to be lowercase. The validator is managing capitalised boolean but if you are providing tsv files, please make sure that the font of the booleans is as expected.
